@@ -1,0 +1,22 @@
+{
+  "title": "TECH 221",
+  "description": "TECH 221 est votre boutique en ligne de high-tech et électroménager : smartphones, ordinateurs, son, accessoires. Livraison rapide et commande simplifiée par WhatsApp.",
+  "keywords": ["TECH 221", "boutique en ligne", "high-tech", "smartphone", "ordinateur", "électroménager", "accessoires", "Cameroon", "WhatsApp"],
+  "openGraph": {
+    "title": "TECH 221",
+    "description": "Votre boutique en ligne de high-tech et électroménager. Commandez facilement via WhatsApp.",
+    "siteName": "TECH 221",
+    "locale": "fr_FR",
+    "type": "website"
+  },
+  "twitter": {
+    "card": "summary",
+    "title": "TECH 221",
+    "description": "Votre boutique en ligne de high-tech et électroménager."
+  },
+  "manifest": "/manifest.webmanifest",
+  "appleWebApp": {
+    "capable": true,
+    "title": "TECH 221"
+  }
+}

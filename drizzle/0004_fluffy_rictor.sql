@@ -1,0 +1,1 @@
+ALTER TABLE "users" DROP CONSTRAINT "users_referred_by_users_id_fk";

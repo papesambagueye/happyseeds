@@ -1,0 +1,51 @@
+Projet : TECH 221 — Boutique de vente en ligne
+
+Objectif :
+Créer une boutique e-commerce moderne, mobile-first, SEO-friendly, gratuite à héberger, avec un dashboard admin complet et un système de validation des commandes via WhatsApp.
+
+Stack technique :
+- Framework : Next.js (App Router, Server Components pour SEO optimal)
+- Langage : TypeScript
+- UI : Tailwind CSS (design moderne, responsive, sans watermark)
+- Base de données & Auth : Supabase (PostgreSQL gratuit, gestion des sessions, API instantanées)
+- Hébergement : Vercel ou Cloudflare Pages (HTTPS automatique, déploiement Git)
+- Gestion d’état : Zustand ou React Context
+- PWA : installable sur Android et iPhone
+
+Fonctionnalités principales (Client) :
+- Page d’accueil attractive avec produits mis en avant + slides publicitaires
+- Catalogue produits avec catégories, filtres et recherche dynamique
+- Page produit détaillée (images HD, description, prix, stock en temps réel)
+- Panier d’achat avec calcul automatique du total
+- Processus de commande simple : redirection vers WhatsApp du superadmin avec numéro de commande, articles pris et total
+- Suivi de commande (statut : en attente → validé)
+- Wishlist pour sauvegarder des produits favoris
+- Avis clients (notation et commentaires)
+- Paiement géré hors site, validation par superadmin
+- Création obligatoire de compte utilisateur
+- Newsletter et multilingue (FR/EN)
+
+Fonctionnalités principales (Admin / Superadmin) :
+- Premier compte créé = superadmin
+- Dashboard complet : gestion produits (CRUD), commandes, utilisateurs, promotions, slides publicitaires
+- Validation des commandes : possibilité de marquer une commande comme "validée" → mise à jour automatique du stock
+- Gestion des messages reçus via le site
+- Gestion des rôles et permissions (multi-admin)
+- Rapports financiers exportables (CSV/Excel)
+- Analytics : trafic, taux de conversion, produits populaires
+- Alertes automatiques sur les produits en rupture
+
+Contraintes techniques :
+- Code 100% généré par IA, propre, exportable, sans watermark
+- Hébergement gratuit avec HTTPS
+- SEO optimisé (balises meta, sitemap, SSR)
+- Performance : Core Web Vitals au vert
+- Interface professionnelle, simple, élégante, inspirée des grandes surfaces
+- Accessibilité conforme WCAG
+
+Livrables attendus :
+- Code source complet et exportable
+- Structure claire (pages, composants, API)
+- Dashboard admin fonctionnel
+- PWA installable
+- Documentation minimale pour déploiement sur Vercel/Cloudflare
