@@ -34,6 +34,11 @@ type Voucher = {
   createdAt: string | Date
 }
 
+type RewardClaim = {
+  id: string; clientName: string | null; email: string; phone: string | null; productName: string
+  points: number; voucherCode: string; status: 'pending' | 'contacted' | 'claimed'; createdAt: string | Date
+}
+
 const emptyForm = { code: '', type: 'percent' as 'percent' | 'fixed', amount: '10', maxUses: '1', active: true, title: '', expiresAt: '' }
 
 export default function AdminVouchers() {
@@ -43,11 +48,14 @@ export default function AdminVouchers() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [claims, setClaims] = useState<RewardClaim[]>([])
 
   const load = useCallback(async () => {
     setLoading(true)
     const res = await apiClient.get<Voucher[]>('/api/admin/vouchers')
     if (res.success) setRows(res.data)
+    const claimsRes = await apiClient.get<RewardClaim[]>('/api/admin/rewards')
+    if (claimsRes.success) setClaims(claimsRes.data)
     setLoading(false)
   }, [])
 
@@ -92,6 +100,22 @@ export default function AdminVouchers() {
     const res = await apiClient.delete(`/api/admin/vouchers?id=${id}`)
     if (res.success) { toast.success('Code promo supprimé'); load() }
     else toast.error(res.error)
+  }
+
+  const updateClaim = async (id: string, status: RewardClaim['status']) => {
+    const res = await apiClient.patch('/api/admin/rewards', { id, status })
+    if (res.success) { toast.success('Statut du cadeau mis à jour'); load() } else toast.error(res.error)
+  }
+
+  const contactClaim = (claim: RewardClaim) => {
+    if (!claim.phone) {
+      toast.error('Aucun téléphone associé à ce gain.')
+      return
+    }
+    const phone = claim.phone.replace(/\D/g, '')
+    const message = `Bonjour ${claim.clientName ?? ''}, votre cadeau TECH 221 (${claim.productName}) est disponible. Votre code est ${claim.voucherCode}. Nous pouvons organiser le retrait ou la livraison.`
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer')
+    updateClaim(claim.id, 'contacted')
   }
 
   return (
@@ -147,6 +171,28 @@ export default function AdminVouchers() {
           </p>
         </Card>
       </div>
+
+      <Card className="mt-6 p-5">
+        <h2 className="font-semibold">Cadeaux à remettre</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Après un échange de points, contactez le client et organisez le retrait ou la livraison.</p>
+        <div className="mt-3 overflow-x-auto rounded-xl border">
+          <Table>
+            <TableHeader><TableRow><TableHead>Client</TableHead><TableHead>Cadeau</TableHead><TableHead>Points</TableHead><TableHead>Code</TableHead><TableHead>Statut</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {claims.length === 0 ? <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">Aucun cadeau à remettre.</TableCell></TableRow> : claims.map((claim) => (
+                <TableRow key={claim.id}>
+                  <TableCell><div className="font-medium">{claim.clientName ?? '—'}</div><div className="text-xs text-muted-foreground">{claim.email}{claim.phone ? ` · ${claim.phone}` : ''}</div></TableCell>
+                  <TableCell>{claim.productName}</TableCell>
+                  <TableCell>{claim.points} Pts</TableCell>
+                  <TableCell className="font-mono text-xs">{claim.voucherCode}</TableCell>
+                  <TableCell><Badge variant={claim.status === 'claimed' ? 'default' : claim.status === 'contacted' ? 'secondary' : 'destructive'}>{claim.status === 'claimed' ? 'Remis' : claim.status === 'contacted' ? 'Contacté' : 'À contacter'}</Badge></TableCell>
+                  <TableCell><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => contactClaim(claim)} disabled={!claim.phone}>Contacter</Button>{claim.status !== 'claimed' && <Button size="sm" onClick={() => updateClaim(claim.id, 'claimed')}>Marquer remis</Button>}</div></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">

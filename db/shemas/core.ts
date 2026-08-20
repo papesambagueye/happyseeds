@@ -224,6 +224,24 @@ export const voucherRedemptions = pgTable(
   ]
 )
 
+export const rewardClaims = pgTable(
+  'reward_claims',
+  {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    productId: text('product_id').notNull().references(() => products.id, { onDelete: 'restrict' }),
+    voucherId: text('voucher_id').notNull().references(() => vouchers.id, { onDelete: 'restrict' }),
+    points: integer('points').notNull(),
+    status: text('status', { enum: ['pending', 'contacted', 'claimed'] }).notNull().default('pending'),
+    claimedAt: timestamp('claimed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('reward_claims_user_idx').on(table.userId),
+    index('reward_claims_status_idx').on(table.status),
+  ]
+)
+
 // Vent-flash: a product temporarily sold at a reduced price.
 export const flashSales = pgTable(
   'flash_sales',
