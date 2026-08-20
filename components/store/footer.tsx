@@ -1,7 +1,8 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Store, MessageCircle } from 'lucide-react'
+import Image from 'next/image'
+import { MessageCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useI18n } from '@/lib/i18n'
 import { apiClient } from '@/lib/request'
@@ -32,16 +33,16 @@ export function Footer() {
   }
 
   return (
-    <footer className="mt-16 border-t bg-card">
+    <footer className="mt-16 border-t border-black bg-black text-white">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <div className="flex items-center gap-2 font-bold text-lg">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Store className="h-5 w-5" />
+            <span className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-white">
+              <Image src="/logo.png" alt="Logo TECH 221" fill className="scale-[2.8] object-contain" unoptimized />
             </span>
             TECH&nbsp;221
           </div>
-          <p className="mt-3 text-sm text-muted-foreground">
+          <p className="mt-3 text-sm text-white/65">
             {locale === 'fr'
               ? 'Votre boutique en ligne de référence. Qualité, service et livraison en toute confiance.'
               : 'Your trusted online store. Quality, service and reliable delivery.'}
@@ -50,7 +51,7 @@ export function Footer() {
 
         <div>
           <h4 className="font-semibold">{locale === 'fr' ? 'Navigation' : 'Navigation'}</h4>
-          <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+          <ul className="mt-3 space-y-2 text-sm text-white/65">
             <li><Link href="/" className="hover:text-primary">{t('nav_home')}</Link></li>
             <li><Link href="/catalogue" className="hover:text-primary">{t('nav_shop')}</Link></li>
             <li><Link href="/favoris" className="hover:text-primary">{t('nav_wishlist')}</Link></li>
@@ -60,7 +61,7 @@ export function Footer() {
 
         <div>
           <h4 className="font-semibold">{locale === 'fr' ? 'Assistance' : 'Support'}</h4>
-          <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+          <ul className="mt-3 space-y-2 text-sm text-white/65">
             <li>
               <a href="https://wa.me/221787301886" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 hover:text-primary">
                 <MessageCircle className="h-4 w-4" /> WhatsApp
@@ -87,7 +88,7 @@ export function Footer() {
           </form>
         </div>
       </div>
-      <div className="border-t py-4 text-center text-xs text-muted-foreground">
+      <div className="border-t border-white/15 py-4 text-center text-xs text-white/50">
         © {year ?? 2026} TECH&nbsp;221 · {t('footer_rights')}
       </div>
     </footer>

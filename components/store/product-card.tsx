@@ -72,45 +72,45 @@ export function ProductCard({ product }: { product: StoreProduct }) {
   }
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-shadow hover:shadow-lg">
+    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-[#D9D9D9] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.05)] transition-all duration-200 hover:-translate-y-1 hover:border-[#007BFF]/40 hover:shadow-[0_16px_34px_rgba(0,123,255,0.14)]">
       <Link href={`/produit/${product.slug}`} className="block">
-        <div className="relative aspect-square overflow-hidden bg-muted">
+        <div className="relative aspect-square overflow-hidden bg-[#F2F2F2]">
           {product.image ? (
             <Image
               src={product.image}
               alt={localName}
               fill
               sizes="(max-width: 768px) 50vw, 25vw"
-              className="object-cover transition-transform group-hover:scale-105"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
               unoptimized
             />
           ) : (
             <div className="grid h-full w-full place-items-center text-muted-foreground">TECH&nbsp;221</div>
           )}
           {hasPromo && (
-            <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+            <span className="absolute left-2 top-2 rounded-md bg-[#E30613] px-2 py-1 text-xs font-bold text-white shadow-sm">
               {t('promo')}
             </span>
           )}
           {product.isFlashSale && (
-            <span className="absolute bottom-2 left-2 rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">
+            <span className="absolute bottom-2 left-2 rounded-md bg-[#E30613] px-2 py-1 text-xs font-bold text-white shadow-sm">
               Vente flash
             </span>
           )}
           {!out && (
-            <span className="absolute right-2 top-2 rounded-full bg-background/90 px-2 py-0.5 text-xs font-medium">
+            <span className="absolute right-2 top-2 rounded-md bg-white/95 px-2 py-1 text-xs font-semibold text-black shadow-sm">
               {t('in_stock')}
             </span>
           )}
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col p-3">
+      <div className="flex flex-1 flex-col p-4">
         <Link href={`/produit/${product.slug}`}>
-          <h3 className="line-clamp-2 break-words leading-snug font-medium">{localName}</h3>
+          <h3 className="line-clamp-2 break-words leading-snug font-semibold text-black">{localName}</h3>
         </Link>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="font-semibold text-primary">{price}</span>
+          <span className="font-bold text-[#007BFF]">{price}</span>
           {hasPromo && (
             <span className="text-sm text-muted-foreground line-through">
               {formatPrice(product.compareAtPrice!, product.currency)}

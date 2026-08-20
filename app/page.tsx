@@ -21,15 +21,18 @@ export default async function HomePage() {
   ])
   return (
     <StoreShell>
+      <div className="border-b border-black bg-[#E30613] px-4 py-2 text-center text-xs font-bold uppercase tracking-[0.16em] text-white">
+        Livraison rapide · offres exclusives · assistance WhatsApp
+      </div>
       {slides.length > 0 && <HeroCarousel slides={slides} shopLabel="Découvrir" />}
       <section className="relative overflow-hidden bg-black text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(0,123,255,0.28),transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(227,6,19,0.2),transparent_22%)]" />
-        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-16 md:grid-cols-2 md:items-center md:py-24">
+        <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-[0.9fr_1.1fr] md:items-center md:py-20">
           <div>
             <p className="inline-flex rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-white">
               TECH 221
             </p>
-            <h1 className="mt-5 text-4xl font-black leading-tight sm:text-5xl">
+            <h1 className="mt-5 max-w-xl text-4xl font-black leading-[1.05] sm:text-6xl">
               La tech qu&apos;on aime, au bon prix.
             </h1>
             <p className="mt-4 max-w-xl text-base text-white/75">
@@ -46,13 +49,13 @@ export default async function HomePage() {
           </div>
 
           <div className="relative mx-auto w-full max-w-xl">
-            <div className="floaty glow-ring overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-[0_28px_80px_rgba(15,23,42,0.45)] backdrop-blur-sm">
+            <div className="floaty glow-ring overflow-hidden rounded-2xl border-4 border-white/15 bg-white/5 shadow-[0_28px_80px_rgba(0,0,0,0.45)] backdrop-blur-sm">
               <Image
                 src="https://images.unsplash.com/photo-1545239351-1141bd82e8a6?w=1200"
                 alt="Produits tech"
                 width={1200}
                 height={900}
-                className="h-[420px] w-full object-cover"
+                className="h-[340px] w-full object-cover sm:h-[430px]"
                 unoptimized
               />
             </div>
@@ -60,7 +63,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-12">
+      <section className="mx-auto max-w-7xl px-4 py-10">
         <div className="grid gap-4 md:grid-cols-3">
           <FeatureCard icon={<Truck className="h-5 w-5" />} title="Livraison rapide" text="Expédition fiable et suivi simple." />
           <FeatureCard icon={<ShieldCheck className="h-5 w-5" />} title="Paiement sécurisé" text="Détails de commande envoyés via WhatsApp." />

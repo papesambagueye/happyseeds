@@ -69,7 +69,7 @@ export function Header() {
 
   return (
     <header
-      className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur"
+      className="sticky top-0 z-40 border-b border-[#D9D9D9] bg-white shadow-[0_4px_18px_rgba(0,0,0,0.06)]"
       style={{
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.25rem)',
         paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 0.5rem)',
@@ -84,7 +84,7 @@ export function Header() {
             </div>
           ) : (
             <div className="relative h-9 w-9 overflow-hidden rounded-xl bg-white">
-              <Image src="/logo.png" alt="Logo TECH 221" fill className="object-contain" unoptimized />
+              <Image src="/logo.png" alt="Logo TECH 221" fill className="scale-[2.8] object-contain" unoptimized />
             </div>
           )}
           <span>{siteName ?? 'TECH\u00A0221'}</span>

@@ -29,12 +29,7 @@ body {
 }
 
 body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: #f2f2f2;
-  opacity: 0.18;
+  display: none;
 }
 
 * {
