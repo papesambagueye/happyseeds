@@ -2,38 +2,46 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState } from 'react'
 import { StoreShell } from '@/components/store/shell'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/lib/stores/cart'
+import { apiClient } from '@/lib/request'
 import { formatPrice } from '@/lib/utils'
 
 export default function CartPage() {
   const items = useCart((state) => state.items)
   const remove = useCart((state) => state.remove)
   const setQuantity = useCart((state) => state.setQuantity)
+  const clear = useCart((state) => state.clear)
   const subtotal = useCart((state) => state.total())
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
   const placeWhatsAppOrder = async () => {
-    // Preferred business WhatsApp number (international, no plus). Fallback to site default.
-    const defaultNumber = '221787301886'
-
-    // Build a readable order summary
-    const lines: string[] = []
-    lines.push('Bonjour, je souhaite passer commande :')
-    lines.push('')
-    for (const it of items) {
-      const line = `${it.quantity} × ${it.name} — ${formatPrice(it.unitPrice, it.currency)}`
-      lines.push(line)
+    if (!customerName.trim() || !customerPhone.trim()) {
+      setError('Veuillez renseigner votre nom et votre téléphone.')
+      return
     }
-    lines.push('')
-    lines.push(`Sous-total : ${formatPrice(subtotal, 'FCFA')}`)
-    lines.push('Merci !')
 
-    const text = encodeURIComponent(lines.join('\n'))
+    setSubmitting(true)
+    setError('')
+    const res = await apiClient.post<{ order: { id: string }; whatsappUrl: string }>('/api/orders', {
+      customerName,
+      customerPhone,
+      items,
+    })
+    setSubmitting(false)
 
-    // Open WhatsApp Web / mobile link
-    const url = `https://wa.me/${defaultNumber}?text=${text}`
-    window.open(url, '_blank')
+    if (!res.success) {
+      setError(res.error)
+      return
+    }
+
+    clear()
+    window.open(res.data.whatsappUrl, '_blank')
   }
 
   return (
@@ -92,7 +100,25 @@ export default function CartPage() {
                 <span>Total</span>
                 <span>{formatPrice(subtotal, 'FCFA')}</span>
               </div>
-              <Button className="mt-6 w-full" onClick={placeWhatsAppOrder}>Commander sur WhatsApp</Button>
+              <div className="mt-6 space-y-3">
+                <input
+                  value={customerName}
+                  onChange={(event) => setCustomerName(event.target.value)}
+                  placeholder="Votre nom"
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                />
+                <input
+                  value={customerPhone}
+                  onChange={(event) => setCustomerPhone(event.target.value)}
+                  placeholder="Votre téléphone (WhatsApp)"
+                  type="tel"
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                />
+                {error && <p className="text-sm text-destructive">{error}</p>}
+                <Button className="w-full" onClick={placeWhatsAppOrder} disabled={submitting}>
+                  {submitting ? 'Enregistrement…' : 'Commander sur WhatsApp'}
+                </Button>
+              </div>
             </aside>
           </div>
         )}
