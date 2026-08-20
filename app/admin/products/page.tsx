@@ -100,7 +100,7 @@ export default function AdminProducts() {
       stock: Number(form.stock) || 0,
       image: form.image || null,
       currency: 'FCFA',
-      categoryId: form.categoryId || null,
+      categoryId: form.categoryId && form.categoryId !== 'none' ? form.categoryId : null,
       featured: form.featured ? 1 : 0,
       published: form.published ? 1 : 0,
     }

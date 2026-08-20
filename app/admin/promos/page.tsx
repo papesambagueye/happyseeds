@@ -32,6 +32,7 @@ type FlashRow = {
 }
 
 type ProductOption = { id: string; name: string; price: number; image: string | null }
+type ProductRow = { product: ProductOption }
 
 const emptyForm = { productId: '', salePrice: '0', active: true, label: '', startsAt: '', endsAt: '' }
 
@@ -48,15 +49,15 @@ export default function AdminPromos() {
     setLoading(true)
     const [flashRes, prodRes] = await Promise.all([
       apiClient.get<FlashRow[]>('/api/admin/flash-sales'),
-      apiClient.get<ProductOption[]>('/api/admin/products'),
+      apiClient.get<ProductRow[]>('/api/admin/products'),
     ])
     if (flashRes.success) setRows(flashRes.data)
     if (prodRes.success) {
       const opts = prodRes.data.map((r) => ({
-        id: r.id,
-        name: r.name,
-        price: r.price,
-        image: r.image,
+        id: r.product.id,
+        name: r.product.name,
+        price: r.product.price,
+        image: r.product.image,
       }))
       setProducts(opts)
     }
