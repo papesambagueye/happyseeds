@@ -161,6 +161,13 @@ export function Header() {
         </div>
       </div>
 
+      <div className="border-t px-4 py-2 md:hidden">
+        <Link href="/catalogue" className="flex items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">
+          <Store className="h-4 w-4" />
+          Voir les produits
+        </Link>
+      </div>
+
       <nav className="hidden border-t md:flex">
         <div className="mx-auto flex max-w-7xl items-center gap-1 px-4 py-0.5 text-sm">
           <NavLink href="/" label={t('nav_home')} active={pathname === '/'} />
