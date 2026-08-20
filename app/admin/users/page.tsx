@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { AdminShell } from '@/components/admin/admin-shell'
 import { SearchInput } from '@/components/admin/search-input'
 import { apiClient } from '@/lib/request'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatPrice } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -13,7 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 
-type User = { id: string; email: string; name: string | null; role: 'superadmin' | 'admin' | 'user'; status: 'active' | 'suspended' | 'banned' | 'disabled'; suspensionUntil: string | Date | null; suspensionReason: string | null; createdAt: string | Date; orderCount: number }
+type User = { id: string; email: string; name: string | null; role: 'superadmin' | 'admin' | 'user'; status: 'active' | 'suspended' | 'banned' | 'disabled'; suspensionUntil: string | Date | null; suspensionReason: string | null; createdAt: string | Date; orderCount: number; validatedOrderCount: number; orderTotal: number }
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[] | null>(null)
@@ -60,20 +60,20 @@ export default function AdminUsers() {
       <div className="mt-6 overflow-hidden rounded-2xl border bg-card">
         <Table>
           <TableHeader>
-            <TableRow><TableHead>Utilisateur</TableHead><TableHead>E-mail</TableHead><TableHead>Rôle</TableHead><TableHead>Statut</TableHead><TableHead>Sanction</TableHead><TableHead>Commandes</TableHead><TableHead>Inscrit</TableHead></TableRow>
+            <TableRow><TableHead>Utilisateur</TableHead><TableHead>E-mail</TableHead><TableHead>Rôle</TableHead><TableHead>Statut</TableHead><TableHead>Sanction</TableHead><TableHead>Commandes</TableHead><TableHead>Dépenses validées</TableHead><TableHead>Inscrit</TableHead></TableRow>
           </TableHeader>
           <TableBody>
             {!users ? (
-              <TableRow><TableCell colSpan={7} className="py-10 text-center text-muted-foreground">…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="py-10 text-center text-muted-foreground">…</TableCell></TableRow>
             ) : users.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="py-10 text-center text-muted-foreground">{query ? 'Aucun utilisateur ne correspond à la recherche.' : 'Aucun utilisateur.'}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="py-10 text-center text-muted-foreground">{query ? 'Aucun utilisateur ne correspond à la recherche.' : 'Aucun utilisateur.'}</TableCell></TableRow>
             ) : users.map((u) => (
               <TableRow key={u.id}>
                 <TableCell>{u.name ?? '—'}</TableCell>
                 <TableCell>{u.email}</TableCell>
                 <TableCell>
                   <Select value={u.role} onValueChange={(v) => changeRole(u.id, v)}>
-                    <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                    <SelectTrigger title="Modifier le rôle" className="w-36 cursor-pointer border-violet-200 shadow-sm transition hover:border-violet-400 hover:shadow-md"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="user">Client</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
@@ -89,7 +89,7 @@ export default function AdminUsers() {
                 <TableCell>
                   {u.role === 'superadmin' ? <span className="text-xs text-muted-foreground">Protégé</span> : (
                     <Select value={u.status === 'active' ? 'active' : u.status === 'banned' ? 'banned' : 'active'} onValueChange={(v) => changeSanction(u.id, v)}>
-                      <SelectTrigger className="w-44"><SelectValue placeholder="Choisir" /></SelectTrigger>
+                      <SelectTrigger title="Gérer la sanction du compte" className="w-44 cursor-pointer border-amber-200 shadow-sm transition hover:border-amber-400 hover:shadow-md"><SelectValue placeholder="Choisir une action" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="active">Réactiver</SelectItem>
                         <SelectItem value="suspended:3_days">Suspendre 3 jours</SelectItem>
@@ -100,7 +100,11 @@ export default function AdminUsers() {
                     </Select>
                   )}
                 </TableCell>
-                <TableCell>{u.orderCount}</TableCell>
+                <TableCell>
+                  <span className="font-semibold">{u.orderCount}</span>
+                  <span className="ml-1 text-xs text-muted-foreground">({u.validatedOrderCount} validée{u.validatedOrderCount === 1 ? '' : 's'})</span>
+                </TableCell>
+                <TableCell className="font-medium text-emerald-700">{formatPrice(u.orderTotal, 'FCFA')}</TableCell>
                 <TableCell>{formatDate(u.createdAt)}</TableCell>
               </TableRow>
             ))}
