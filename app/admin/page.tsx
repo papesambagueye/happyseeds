@@ -58,7 +58,7 @@ export default function AdminDashboard() {
         <div className="flex gap-1 rounded-lg border bg-muted/40 p-1">
           {RANGES.map((r) => (
             <button key={r.value} onClick={() => setDays(r.value)}
-              className={`rounded-md px-3 py-1 text-sm ${days === r.value ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+              className={`cursor-pointer rounded-md px-3 py-1 text-sm transition hover:shadow-sm ${days === r.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-muted'}`}>
               {r.label}
             </button>
           ))}

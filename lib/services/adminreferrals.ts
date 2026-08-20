@@ -2,6 +2,7 @@ import 'server-only'
 import { eq, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import {
+  loyaltyEvents,
   referralRewards,
   users,
   vouchers,
@@ -62,12 +63,16 @@ export async function getReferralDashboard() {
   }))
 
   const totalRewards = rewards.length
-  const totalRewardedCents = rewards.reduce((sum: number, row) => sum + row.amount, 0)
+  const pointRows = await db
+    .select({ points: loyaltyEvents.points })
+    .from(loyaltyEvents)
+    .where(sql`${loyaltyEvents.type} = 'voucher_bonus' AND ${loyaltyEvents.points} > 0`)
+  const totalRewardedPoints = pointRows.reduce((sum: number, row: { points: number }) => sum + row.points, 0)
 
   return {
     totalReferrers: rows.length,
     totalRewards,
-    totalRewardedCents,
+    totalRewardedPoints,
     rows: rows.sort((a, b) => b.rewardedCount - a.rewardedCount),
   }
 }

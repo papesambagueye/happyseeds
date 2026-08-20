@@ -97,7 +97,7 @@ export default function AdminOrders() {
       <div className="mt-4 flex gap-1 rounded-lg border bg-muted/40 p-1 w-fit">
         {tabs.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className={`rounded-md px-3 py-1 text-sm ${filter === t.key ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>
+            className={`cursor-pointer rounded-md px-3 py-1 text-sm transition hover:shadow-sm ${filter === t.key ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-muted'}`}>
             {t.label}
           </button>
         ))}
@@ -118,7 +118,7 @@ export default function AdminOrders() {
                 <TableCell>{formatPrice(o.total, o.currency)}</TableCell>
                 <TableCell><Badge variant={statusStyles[o.status]}>{statusLabels[o.status]}</Badge></TableCell>
                 <TableCell>{formatDateTime(o.createdAt)}</TableCell>
-                <TableCell><Button variant="ghost" size="icon" onClick={() => openDetail(o.id)}><Eye className="h-4 w-4" /></Button></TableCell>
+                <TableCell><Button title="Voir les détails de la commande" variant="ghost" size="icon" onClick={() => openDetail(o.id)}><Eye className="h-4 w-4" /></Button></TableCell>
               </TableRow>
             ))}
           </TableBody>

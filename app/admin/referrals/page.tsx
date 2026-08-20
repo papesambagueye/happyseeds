@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { Share2 } from 'lucide-react'
 import { AdminShell } from '@/components/admin/admin-shell'
 import { apiClient } from '@/lib/request'
-import { formatPrice } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -22,7 +21,7 @@ type Row = {
 type Dashboard = {
   totalReferrers: number
   totalRewards: number
-  totalRewardedCents: number
+  totalRewardedPoints: number
   rows: Row[]
 }
 
@@ -55,8 +54,8 @@ export default function AdminReferrals() {
           <div className="mt-1 text-sm text-muted-foreground">Récompenses octroyées</div>
         </Card>
         <Card className="p-5">
-          <div className="text-3xl font-bold text-emerald-600">{formatPrice(data?.totalRewardedCents ?? 0, 'FCFA')}</div>
-          <div className="mt-1 text-sm text-muted-foreground">Bons émis</div>
+          <div className="text-3xl font-bold text-emerald-600">{data?.totalRewardedPoints ?? 0} Pts</div>
+          <div className="mt-1 text-sm text-muted-foreground">Points attribués</div>
         </Card>
       </div>
 

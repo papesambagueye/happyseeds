@@ -36,8 +36,9 @@ export async function POST(request: Request) {
     }
 
     const user = await getCurrentUser()
+    if (!user) return NextResponse.json({ success: false, error: 'Connectez-vous pour passer une commande.' }, { status: 401 })
     const result = await createOrder({
-      userId: user?.id ?? null,
+      userId: user.id,
       customerName,
       customerPhone,
       items: body.items,
