@@ -8,7 +8,7 @@ import { orderItems, orders } from '@/db/schemas/core'
 import { handleApiError } from '@/lib/api-error-response'
 import { requireStaff } from '@/lib/auth/admin-guard'
 import { AppError } from '@/lib/errors'
-import { cancelOrder, validateOrder, holdOrder } from '@/lib/services/adminorders'
+import { updateOrderStatus } from '@/lib/services/adminorders'
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -44,18 +44,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try {
     await requireStaff()
     const { id } = await params
-    const body = (await request.json().catch(() => ({}))) as { action?: string }
-    const action = body.action
-
-    if (action === 'validate') {
-      await validateOrder(id)
-    } else if (action === 'cancel') {
-      await cancelOrder(id)
-    } else if (action === 'hold') {
-      await holdOrder(id)
-    } else {
-      throw new AppError('Action invalide', 400)
+    const body = (await request.json().catch(() => ({}))) as { status?: string }
+    const allowed = ['pending', 'validated', 'cancelled', 'on_hold'] as const
+    if (!body.status || !allowed.includes(body.status as (typeof allowed)[number])) {
+      throw new AppError('Statut invalide', 400)
     }
+    await updateOrderStatus(id, body.status as (typeof allowed)[number])
 
     return NextResponse.json({ success: true, data: null })
   } catch (error) {

@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { AdminShell } from '@/components/admin/admin-shell'
 import { SearchInput } from '@/components/admin/search-input'
 import { apiClient } from '@/lib/request'
-import { formatPrice, formatDate } from '@/lib/utils'
+import { formatPrice } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -26,6 +26,8 @@ type OrderDetail = {
   items: { id: string; productId: string | null; productName: string | null; quantity: number; price: number; currency: string }[]
   whatsappMessage: string | null
 }
+
+type OrderStatus = Order['status']
 
 const statusStyles: Record<string, 'secondary' | 'default' | 'destructive'> = {
   pending: 'secondary', on_hold: 'secondary', validated: 'default', cancelled: 'destructive',
@@ -63,12 +65,10 @@ export default function AdminOrders() {
     else toast.error(res.error)
   }
 
-  const act = async (id: string, action: 'validate' | 'cancel' | 'hold') => {
-    const res = await apiClient.patch(`/api/admin/orders/${id}`, { action })
+  const act = async (id: string, status: OrderStatus) => {
+    const res = await apiClient.patch(`/api/admin/orders/${id}`, { status })
     if (res.success) {
-      if (action === 'validate') toast.success('Commande validée')
-      else if (action === 'cancel') toast.success('Commande annulée')
-      else if (action === 'hold') toast.success('Commande mise en attente')
+      toast.success(`Commande ${statusLabels[status].toLowerCase()}`)
       setOpen(false)
       load()
     } else toast.error(res.error)
@@ -117,7 +117,7 @@ export default function AdminOrders() {
                 <TableCell>{o.customerName || '—'}</TableCell>
                 <TableCell>{formatPrice(o.total, o.currency)}</TableCell>
                 <TableCell><Badge variant={statusStyles[o.status]}>{statusLabels[o.status]}</Badge></TableCell>
-                <TableCell>{formatDate(o.createdAt)}</TableCell>
+                <TableCell>{formatDateTime(o.createdAt)}</TableCell>
                 <TableCell><Button variant="ghost" size="icon" onClick={() => openDetail(o.id)}><Eye className="h-4 w-4" /></Button></TableCell>
               </TableRow>
             ))}
@@ -132,7 +132,7 @@ export default function AdminOrders() {
             <>
               <div className="flex items-center gap-2">
                 <Badge variant={statusStyles[detail.order.status]}>{statusLabels[detail.order.status]}</Badge>
-                <span className="text-sm text-muted-foreground">le {formatDate(detail.order.createdAt)}</span>
+                <span className="text-sm text-muted-foreground">le {formatDateTime(detail.order.createdAt)}</span>
               </div>
 
               <div className="rounded-xl border p-3 text-sm">
@@ -160,17 +160,34 @@ export default function AdminOrders() {
                 </div>
               )}
 
-              {detail.order.status === 'pending' && (
-                <div className="flex gap-3">
-                  <Button onClick={() => act(detail.order!.id, 'validate')} className="flex-1"><Check className="mr-1 h-4 w-4" /> Valider</Button>
-                  <Button onClick={() => act(detail.order!.id, 'hold')} className="flex-1">Mettre en attente</Button>
-                  <Button onClick={() => act(detail.order!.id, 'cancel')} variant="destructive" className="flex-1"><X className="mr-1 h-4 w-4" /> Annuler</Button>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Changer le statut</p>
+                <div className="flex flex-wrap gap-2">
+                  {(['pending', 'on_hold', 'validated', 'cancelled'] as OrderStatus[]).map((status) => (
+                    <Button
+                      key={status}
+                      variant={status === 'cancelled' ? 'destructive' : status === detail.order!.status ? 'default' : 'outline'}
+                      disabled={status === detail.order!.status}
+                      onClick={() => act(detail.order!.id, status)}
+                    >
+                      {status === 'validated' && <Check className="mr-1 h-4 w-4" />}
+                      {status === 'cancelled' && <X className="mr-1 h-4 w-4" />}
+                      {statusLabels[status]}
+                    </Button>
+                  ))}
                 </div>
-              )}
+              </div>
             </>
           )}
         </DialogContent>
       </Dialog>
     </AdminShell>
   )
+}
+
+function formatDateTime(value: string | Date) {
+  return new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(new Date(value))
 }

@@ -26,6 +26,7 @@ export default function CartPage() {
       return
     }
 
+    const whatsappWindow = window.open('about:blank', '_blank')
     setSubmitting(true)
     setError('')
     const res = await apiClient.post<{ order: { id: string }; whatsappUrl: string }>('/api/orders', {
@@ -36,12 +37,17 @@ export default function CartPage() {
     setSubmitting(false)
 
     if (!res.success) {
+      whatsappWindow?.close()
       setError(res.error)
       return
     }
 
     clear()
-    window.open(res.data.whatsappUrl, '_blank')
+    if (whatsappWindow) {
+      whatsappWindow.location.href = res.data.whatsappUrl
+    } else {
+      window.location.href = res.data.whatsappUrl
+    }
   }
 
   return (

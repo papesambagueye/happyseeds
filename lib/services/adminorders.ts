@@ -86,6 +86,56 @@ export async function validateOrder(orderId: string) {
   return rows
 }
 
+export async function updateOrderStatus(orderId: string, nextStatus: 'pending' | 'validated' | 'cancelled' | 'on_hold') {
+  const result = await db.transaction(async (tx: any) => {
+    const rows = await tx.select().from(orders).where(eq(orders.id, orderId)).for('update')
+    if (rows.length === 0) throw new AppError('Commande introuvable', 404, 'NOT_FOUND')
+    const order = rows[0]
+    const previousStatus = order.status as 'pending' | 'validated' | 'cancelled' | 'on_hold'
+    if (previousStatus === nextStatus) return order
+
+    const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, orderId))
+    if (previousStatus === 'cancelled' && nextStatus !== 'cancelled') {
+      for (const item of items) {
+        if (!item.productId) continue
+        const productRows = await tx.select({ stock: products.stock }).from(products).where(eq(products.id, item.productId)).for('update')
+        if (productRows.length === 0 || productRows[0].stock < item.quantity) {
+          throw new AppError(`Stock insuffisant pour « ${item.productName} »`, 409)
+        }
+        await tx.update(products).set({ stock: sql`${products.stock} - ${item.quantity}` }).where(eq(products.id, item.productId))
+      }
+    } else if (previousStatus !== 'cancelled' && nextStatus === 'cancelled') {
+      for (const item of items) {
+        if (item.productId) {
+          await tx.update(products).set({ stock: sql`${products.stock} + ${item.quantity}` }).where(eq(products.id, item.productId))
+        }
+      }
+    }
+
+    if (previousStatus !== 'validated' && nextStatus === 'validated') {
+      await upsertTurnover(tx, Number(order.total) || 0)
+    } else if (previousStatus === 'validated' && nextStatus !== 'validated') {
+      const cfg = await tx.select().from(storeConfig).where(eq(storeConfig.key, 'turnover_cents'))
+      if (cfg.length > 0) {
+        const nextTurnover = Math.max(0, Number(cfg[0].value || 0) - Number(order.total || 0))
+        await tx.update(storeConfig).set({ value: String(nextTurnover), updatedAt: sql`now()` }).where(eq(storeConfig.key, 'turnover_cents'))
+      }
+    }
+
+    const updated = await tx.update(orders).set({ status: nextStatus, updatedAt: sql`now()` }).where(eq(orders.id, orderId)).returning()
+    return updated[0]
+  })
+
+  if (nextStatus === 'validated') {
+    try {
+      await awardReferralBonusOnValidation(orderId)
+    } catch (error) {
+      console.error('Referral bonus failed for order', orderId, error)
+    }
+  }
+  return result
+}
+
 export async function holdOrder(orderId: string) {
   const orderRows = await db.select().from(orders).where(eq(orders.id, orderId))
   if (orderRows.length === 0) throw new AppError('Commande introuvable', 404, 'NOT_FOUND')
