@@ -21,9 +21,11 @@ export const users = pgTable(
     role: text('role', { enum: ['superadmin', 'admin', 'user'] })
       .notNull()
       .default('user'),
-    status: text('status', { enum: ['active', 'disabled'] })
+    status: text('status', { enum: ['active', 'suspended', 'banned', 'disabled'] })
       .notNull()
       .default('active'),
+    suspensionUntil: timestamp('suspension_until', { withTimezone: true }),
+    suspensionReason: text('suspension_reason'),
     referredBy: text('referred_by'), // id of the user who referred this account
     referralCode: text('referral_code'), // unique personal code shared to friends
     airpodRewardedAt: timestamp('airpod_rewarded_at'),

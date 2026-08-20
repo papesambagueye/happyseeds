@@ -95,6 +95,8 @@ async function getUserByToken(token: string): Promise<AuthUser | null> {
       email: users.email,
       name: users.name,
       role: users.role,
+      status: users.status,
+      suspensionUntil: users.suspensionUntil,
     })
     .from(sessions)
     .innerJoin(users, eq(sessions.userId, users.id))
@@ -103,7 +105,10 @@ async function getUserByToken(token: string): Promise<AuthUser | null> {
     )
 
   if (rows.length === 0) return null
-  return rows[0] as AuthUser
+  const user = rows[0]
+  if (user.status === 'banned' || user.status === 'disabled') return null
+  if (user.status === 'suspended' && (!user.suspensionUntil || user.suspensionUntil > new Date())) return null
+  return user as AuthUser
 }
 
 /**

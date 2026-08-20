@@ -13,7 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 
-type User = { id: string; email: string; name: string | null; role: 'superadmin' | 'admin' | 'user'; status: string; createdAt: string | Date; orderCount: number }
+type User = { id: string; email: string; name: string | null; role: 'superadmin' | 'admin' | 'user'; status: 'active' | 'suspended' | 'banned' | 'disabled'; suspensionUntil: string | Date | null; suspensionReason: string | null; createdAt: string | Date; orderCount: number }
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[] | null>(null)
@@ -35,6 +35,18 @@ export default function AdminUsers() {
     else toast.error(res.error)
   }
 
+  const changeSanction = async (id: string, value: string) => {
+    if (value === 'active') {
+      const res = await apiClient.patch(`/api/admin/users?id=${id}`, { sanction: 'active' })
+      if (res.success) { toast.success('Compte réactivé'); load() } else toast.error(res.error)
+      return
+    }
+    const reason = window.prompt('Motif de la sanction (facultatif)') ?? ''
+    const [sanction, duration] = value.split(':')
+    const res = await apiClient.patch(`/api/admin/users?id=${id}`, { sanction, duration, reason })
+    if (res.success) { toast.success(sanction === 'banned' ? 'Compte banni' : 'Compte suspendu'); load() } else toast.error(res.error)
+  }
+
   return (
     <AdminShell>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -48,13 +60,13 @@ export default function AdminUsers() {
       <div className="mt-6 overflow-hidden rounded-2xl border bg-card">
         <Table>
           <TableHeader>
-            <TableRow><TableHead>Utilisateur</TableHead><TableHead>E-mail</TableHead><TableHead>Rôle</TableHead><TableHead>Statut</TableHead><TableHead>Commandes</TableHead><TableHead>Inscrit</TableHead></TableRow>
+            <TableRow><TableHead>Utilisateur</TableHead><TableHead>E-mail</TableHead><TableHead>Rôle</TableHead><TableHead>Statut</TableHead><TableHead>Sanction</TableHead><TableHead>Commandes</TableHead><TableHead>Inscrit</TableHead></TableRow>
           </TableHeader>
           <TableBody>
             {!users ? (
-              <TableRow><TableCell colSpan={6} className="py-10 text-center text-muted-foreground">…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="py-10 text-center text-muted-foreground">…</TableCell></TableRow>
             ) : users.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="py-10 text-center text-muted-foreground">{query ? 'Aucun utilisateur ne correspond à la recherche.' : 'Aucun utilisateur.'}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="py-10 text-center text-muted-foreground">{query ? 'Aucun utilisateur ne correspond à la recherche.' : 'Aucun utilisateur.'}</TableCell></TableRow>
             ) : users.map((u) => (
               <TableRow key={u.id}>
                 <TableCell>{u.name ?? '—'}</TableCell>
@@ -69,7 +81,25 @@ export default function AdminUsers() {
                     </SelectContent>
                   </Select>
                 </TableCell>
-                <TableCell>{u.status === 'active' ? <Badge>Actif</Badge> : <Badge variant="destructive">Désactivé</Badge>}</TableCell>
+                <TableCell>
+                  {u.status === 'active' && <Badge>Actif</Badge>}
+                  {u.status === 'suspended' && <Badge variant="secondary">Suspendu{u.suspensionUntil ? ` jusqu’au ${formatDate(u.suspensionUntil)}` : ''}</Badge>}
+                  {(u.status === 'banned' || u.status === 'disabled') && <Badge variant="destructive">Banni</Badge>}
+                </TableCell>
+                <TableCell>
+                  {u.role === 'superadmin' ? <span className="text-xs text-muted-foreground">Protégé</span> : (
+                    <Select value={u.status === 'active' ? 'active' : u.status === 'banned' ? 'banned' : 'active'} onValueChange={(v) => changeSanction(u.id, v)}>
+                      <SelectTrigger className="w-44"><SelectValue placeholder="Choisir" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Réactiver</SelectItem>
+                        <SelectItem value="suspended:3_days">Suspendre 3 jours</SelectItem>
+                        <SelectItem value="suspended:1_month">Suspendre 1 mois</SelectItem>
+                        <SelectItem value="suspended:3_months">Suspendre 3 mois</SelectItem>
+                        <SelectItem value="banned">Bannir définitivement</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </TableCell>
                 <TableCell>{u.orderCount}</TableCell>
                 <TableCell>{formatDate(u.createdAt)}</TableCell>
               </TableRow>
