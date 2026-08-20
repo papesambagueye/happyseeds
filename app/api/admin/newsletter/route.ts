@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { desc, eq, ilike } from 'drizzle-orm'
+import { desc, ilike } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 
 import { db } from '@/db'

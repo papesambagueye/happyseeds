@@ -7,7 +7,7 @@ import { awardReferralBonusOnValidation } from './referrals'
 
 export async function listAdminOrders(status?: string, q?: string) {
   const term = q?.trim()
-  const base = db
+  let base = db
     .select({
       id: orders.id,
       orderNumber: orders.orderNumber,
@@ -25,18 +25,18 @@ export async function listAdminOrders(status?: string, q?: string) {
 
   const allowed = ['pending', 'validated', 'cancelled', 'on_hold']
   if (status && allowed.includes(status)) {
-    base.where(eq(orders.status, status as 'pending' | 'validated' | 'cancelled' | 'on_hold'))
+    base = base.where(eq(orders.status, status as 'pending' | 'validated' | 'cancelled' | 'on_hold')) as typeof base
   }
   if (term) {
     const pattern = `%${term}%`
-    base.where(
+    base = base.where(
       or(
         ilike(orders.customerName, pattern),
         ilike(orders.customerPhone, pattern),
         ilike(orders.orderNumber, pattern),
         ilike(orders.id, pattern)
       )
-    )
+    ) as typeof base
   }
   return base.orderBy(desc(orders.createdAt))
 }

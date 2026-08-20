@@ -1,13 +1,15 @@
 import { redirect } from 'next/navigation'
 import { StoreShell } from '@/components/store/shell'
 import { getCurrentUser } from '@/lib/auth/session'
+import { getReferralOverview } from '@/lib/services/referrals'
 
 export default async function ReferralPage() {
   const user = await getCurrentUser()
   if (!user) redirect('/login')
 
-  const referralCode = user.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').slice(0, 12).toUpperCase()
-  const referralLink = `/register?ref=${encodeURIComponent(referralCode)}`
+  const overview = await getReferralOverview(user.id)
+  const referralCode = overview.code
+  const referralLink = overview.link
 
   return (
     <StoreShell>

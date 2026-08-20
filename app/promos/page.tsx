@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { StoreShell } from '@/components/store/shell'
 import { Button } from '@/components/ui/button'
 import { getFlashSaleProducts } from '@/lib/services/catalog'
+import { formatPrice } from '@/lib/utils'
 
 export default async function PromosPage() {
   let sales: Awaited<ReturnType<typeof getFlashSaleProducts>> = []
@@ -32,7 +33,7 @@ export default async function PromosPage() {
           </div>
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {sales.map(({ product }: { product: { id: string; name: string; price: number; compareAtPrice: number | null; image?: string | null; slug: string } }) => (
+            {sales.map(({ product }: { product: { id: string; name: string; price: number; compareAtPrice: number | null; currency: string; image?: string | null; slug: string } }) => (
               <div key={product.id} className="overflow-hidden rounded-2xl border bg-card">
                 <div className="relative h-56 w-full">
                   {product.image && (
@@ -45,8 +46,8 @@ export default async function PromosPage() {
                   </div>
                   <h2 className="mt-3 text-xl font-semibold">{product.name}</h2>
                   <div className="mt-2 flex items-center gap-2">
-                    <span className="text-xl font-bold text-primary">{(product.price / 100).toLocaleString('fr-FR')} FCFA</span>
-                    <span className="text-sm text-muted-foreground line-through">{(product.compareAtPrice ?? product.price / 100).toLocaleString('fr-FR')} FCFA</span>
+                    <span className="text-xl font-bold text-primary">{formatPrice(product.price, product.currency)}</span>
+                    <span className="text-sm text-muted-foreground line-through">{formatPrice(product.compareAtPrice ?? product.price, product.currency)}</span>
                   </div>
                   <Button asChild className="mt-4 w-full">
                     <Link href={`/produit/${product.slug}`}>Voir l’offre</Link>

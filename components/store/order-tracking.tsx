@@ -9,7 +9,7 @@ import { formatDate, formatPrice } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 type OrderDetail = {
-  order: { id: string; orderNumber: string; status: 'pending' | 'validated' | 'cancelled'; total: number; currency: string; customerName: string; customerPhone: string; createdAt: string }
+  order: { id: string; orderNumber: string; status: 'pending' | 'validated' | 'cancelled' | 'on_hold'; total: number; currency: string; customerName: string; customerPhone: string; createdAt: string }
   items: { id: string; productName: string; quantity: number; unitPrice: number }[]
 }
 
@@ -55,6 +55,7 @@ export function OrderTracking({ id }: { id: string }) {
               {order.status === 'pending' && t('order_status_pending')}
               {order.status === 'validated' && t('order_status_validated')}
               {order.status === 'cancelled' && t('order_status_cancelled')}
+              {order.status === 'on_hold' && 'Mis en attente'}
             </span>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">

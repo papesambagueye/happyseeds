@@ -4,7 +4,18 @@ import { NextResponse } from 'next/server'
 
 import { handleApiError } from '@/lib/api-error-response'
 import { getCurrentUser } from '@/lib/auth/session'
-import { createOrder } from '@/lib/services/orders'
+import { createOrder, listUserOrders } from '@/lib/services/orders'
+
+export async function GET() {
+  try {
+    const user = await getCurrentUser()
+    if (!user) return NextResponse.json({ success: false, error: 'Connexion requise.' }, { status: 401 })
+    const rows = await listUserOrders(user.id)
+    return NextResponse.json({ success: true, data: rows })
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
 
 export async function POST(request: Request) {
   try {

@@ -9,6 +9,7 @@ import { handleApiError } from '@/lib/api-error-response'
 import { ValidationError } from '@/lib/errors'
 import { hashPassword } from '@/lib/auth/password'
 import { createSession } from '@/lib/auth/session'
+import { attachReferral, getReferrerByCode } from '@/lib/services/referrals'
 
 export async function POST(request: Request) {
   try {
@@ -60,14 +61,16 @@ export async function POST(request: Request) {
 
     const superadminCount = Number(superadminCountRow[0]?.count ?? 0)
     const shouldBeSuperadmin = superadminCount === 0
+    const referrerId = body.ref ? await getReferrerByCode(body.ref) : null
 
-    await db.insert(users).values({
+    const inserted = await db.insert(users).values({
       email,
       name,
       passwordHash: await hashPassword(password),
       role: shouldBeSuperadmin ? 'superadmin' : 'user',
       status: 'active',
-    })
+    }).returning({ id: users.id })
+    if (referrerId && inserted[0]) await attachReferral(inserted[0].id, referrerId)
 
     const created = await db
       .select({ id: users.id, email: users.email, name: users.name, role: users.role })

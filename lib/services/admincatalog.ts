@@ -30,7 +30,7 @@ function slugify(value: string): string {
 
 export async function listAdminProducts(q?: string) {
   const term = q?.trim()
-  const query = db
+  let query = db
     .select({
       product: products,
       categoryName: categories.name,
@@ -40,7 +40,7 @@ export async function listAdminProducts(q?: string) {
     .leftJoin(categories, eq(products.categoryId, categories.id))
   if (term) {
     const pattern = `%${term}%`
-    query.where(or(ilike(products.name, pattern), ilike(products.nameEn, pattern)))
+    query = query.where(or(ilike(products.name, pattern), ilike(products.nameEn, pattern))) as typeof query
   }
   return query.orderBy(desc(products.createdAt))
 }
@@ -137,10 +137,10 @@ export async function deleteCategory(id: string) {
 
 export async function listAdminSlides(q?: string) {
   const term = q?.trim()
-  const query = db.select().from(slides)
+  let query = db.select().from(slides)
   if (term) {
     const pattern = `%${term}%`
-    query.where(or(ilike(slides.title, pattern), ilike(slides.titleEn, pattern)))
+    query = query.where(or(ilike(slides.title, pattern), ilike(slides.titleEn, pattern))) as typeof query
   }
   return query.orderBy(asc(slides.sortOrder))
 }

@@ -3,40 +3,9 @@ import Image from 'next/image'
 import { ArrowRight, ShieldCheck, Sparkles, Truck } from 'lucide-react'
 import { StoreShell } from '@/components/store/shell'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-
-const featuredProducts = [
-  {
-    id: 'p1',
-    slug: 'smartphone-nova-x5',
-    name: 'Smartphone Nova X5',
-    nameEn: 'Smartphone Nova X5',
-    price: 285000,
-    compareAtPrice: 320000,
-    currency: 'FCFA',
-    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800',
-  },
-  {
-    id: 'p2',
-    slug: 'ecouteurs-sans-fil-pro',
-    name: 'Écouteurs sans fil Pro',
-    nameEn: 'Pro Wireless Earbuds',
-    price: 25000,
-    compareAtPrice: 35000,
-    currency: 'FCFA',
-    image: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=800',
-  },
-  {
-    id: 'p3',
-    slug: 'casque-studio-anc',
-    name: 'Casque Studio ANC',
-    nameEn: 'Studio ANC Headphones',
-    price: 120000,
-    compareAtPrice: 145000,
-    currency: 'FCFA',
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800',
-  },
-]
+import { HeroCarousel } from '@/components/store/hero-carousel'
+import { ProductCard } from '@/components/store/product-card'
+import { getActiveSlides, getFeaturedProducts } from '@/lib/services/catalog'
 
 const categories = [
   { title: 'Téléphones', titleEn: 'Phones', href: '/catalogue' },
@@ -45,9 +14,14 @@ const categories = [
   { title: 'Ordinateurs', titleEn: 'Computers', href: '/catalogue' },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [slides, featuredProducts] = await Promise.all([
+    getActiveSlides().catch(() => []),
+    getFeaturedProducts().catch(() => []),
+  ])
   return (
     <StoreShell>
+      {slides.length > 0 && <HeroCarousel slides={slides} shopLabel="Découvrir" />}
       <section className="relative overflow-hidden bg-gradient-to-r from-slate-950 via-violet-950 to-slate-900 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(168,85,247,0.35),transparent_20%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.35),transparent_22%)]" />
         <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-16 md:grid-cols-2 md:items-center md:py-24">
@@ -120,27 +94,7 @@ export default function HomePage() {
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {featuredProducts.map((product) => (
-            <Card key={product.id} className="soft-card overflow-hidden p-0">
-              <Link href={`/produit/${product.slug}`} className="block">
-                <div className="relative h-64 w-full overflow-hidden">
-                  <Image src={product.image} alt={product.name} fill className="object-cover transition duration-500 hover:scale-105" unoptimized />
-                </div>
-              </Link>
-              <div className="p-4">
-                <Link href={`/produit/${product.slug}`} className="block text-lg font-semibold text-slate-900 hover:text-violet-700">
-                  {product.name}
-                </Link>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-xl font-bold text-violet-700">{product.price.toLocaleString('fr-FR')} FCFA</span>
-                  <span className="text-sm text-muted-foreground line-through">{product.compareAtPrice.toLocaleString('fr-FR')} FCFA</span>
-                </div>
-                <Button asChild className="mt-4 w-full">
-                  <Link href={`/produit/${product.slug}`}>Voir le produit</Link>
-                </Button>
-              </div>
-            </Card>
-          ))}
+          {featuredProducts.length === 0 ? <p className="col-span-full text-muted-foreground">Aucun produit en vedette.</p> : featuredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
         </div>
       </section>
     </StoreShell>

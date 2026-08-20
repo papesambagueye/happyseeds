@@ -14,7 +14,6 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -127,21 +126,12 @@ export default function AdminProducts() {
   const set = (key: keyof typeof emptyForm) => (value: string | boolean) =>
     setForm((f) => ({ ...f, [key]: value }))
 
-  function Field({ label, children }: { label: string; children: React.ReactNode }) {
-    return (
-      <label className="block space-y-2 text-sm font-medium">
-        <span>{label}</span>
-        {children}
-      </label>
-    )
-  }
-
   return (
     <AdminShell>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Produits</h1>
         <div className="flex items-center gap-3">
-          <SearchInput value={query} onSearch={load} placeholder="Rechercher produits…" className="w-56 sm:w-72" />
+          <SearchInput value={query} onSearch={(value) => { setQuery(value); load(value) }} placeholder="Rechercher produits…" className="w-56 sm:w-72" />
           <Button onClick={openNew}><Plus className="mr-1 h-4 w-4" /> Nouveau produit</Button>
         </div>
       </div>
@@ -229,5 +219,14 @@ export default function AdminProducts() {
         </DialogContent>
       </Dialog>
     </AdminShell>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block space-y-2 text-sm font-medium">
+      <span>{label}</span>
+      {children}
+    </label>
   )
 }

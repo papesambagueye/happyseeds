@@ -104,6 +104,11 @@ export async function listAdminFlashSales() {
 
 export async function upsertFlashSale(input: FlashSaleUpsert & { id?: string }) {
   if (input.salePrice < 0) throw new AppError('Le prix de vente doit être positif', 400)
+  const productRows = await db.select({ price: products.price }).from(products).where(eq(products.id, input.productId)).limit(1)
+  if (productRows.length === 0) throw new AppError('Produit introuvable', 404)
+  if (input.salePrice <= 0 || input.salePrice >= productRows[0].price) {
+    throw new AppError('Le prix flash doit être inférieur au prix normal et supérieur à zéro', 400)
+  }
   if (!input.id) {
     const inserted = await db
       .insert(flashSales)

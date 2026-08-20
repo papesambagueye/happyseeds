@@ -113,6 +113,9 @@ export async function createOrder(input: OrderInput) {
   let subtotal = 0
   const orderItemRows: { productId: string; productName: string; quantity: number; unitPrice: number }[] = []
   for (const item of items) {
+    if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
+      throw new AppError(`Quantité invalide pour « ${item.name} »`, 400)
+    }
     const product = priceMap.get(item.productId)
     if (!product) throw new AppError(`Produit introuvable : ${item.name}`, 400)
     if (product.stock < item.quantity) {
