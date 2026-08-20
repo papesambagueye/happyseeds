@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { StoreShell } from '@/components/store/shell'
 import { getCurrentUser } from '@/lib/auth/session'
@@ -20,10 +21,10 @@ export default async function OrdersPage() {
         {orders.length === 0 ? <div className="rounded-2xl border bg-card p-8 text-center text-muted-foreground">Aucune commande pour le moment.</div> : (
           <div className="space-y-3">
             {orders.map((order: typeof orders[number]) => (
-              <div key={order.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4">
+              <Link key={order.id} href={`/suivi?id=${encodeURIComponent(order.id)}`} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 transition-colors hover:border-primary/50 hover:bg-primary/5">
                 <div><p className="font-semibold">#{order.orderNumber}</p><p className="text-sm text-muted-foreground">{formatDate(order.createdAt)}</p></div>
                 <div className="text-right"><p className="font-semibold">{formatPrice(order.total, order.currency)}</p><p className="text-sm capitalize text-muted-foreground">{order.status.replace('_', ' ')}</p></div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

@@ -10,6 +10,7 @@ import { ValidationError } from '@/lib/errors'
 import { hashPassword } from '@/lib/auth/password'
 import { createSession } from '@/lib/auth/session'
 import { attachReferral, getReferrerByCode } from '@/lib/services/referrals'
+import { awardSignupBonus } from '@/lib/services/rewards'
 
 export async function POST(request: Request) {
   try {
@@ -18,11 +19,13 @@ export async function POST(request: Request) {
       password?: string
       name?: string
       ref?: string
+      birthDate?: string
     }
 
     const email = (body.email ?? '').trim().toLowerCase()
     const name = (body.name ?? '').trim()
     const password = body.password ?? ''
+    const birthDate = (body.birthDate ?? '').trim() || null
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new ValidationError('Adresse e-mail invalide.')
@@ -34,6 +37,10 @@ export async function POST(request: Request) {
 
     if (!password || password.length < 8) {
       throw new ValidationError('Le mot de passe doit contenir au moins 8 caractères.')
+    }
+
+    if (birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
+      throw new ValidationError('Date de naissance invalide.')
     }
 
     if (!process.env.DATABASE_URL) {
@@ -67,10 +74,12 @@ export async function POST(request: Request) {
       email,
       name,
       passwordHash: await hashPassword(password),
+      birthDate,
       role: shouldBeSuperadmin ? 'superadmin' : 'user',
       status: 'active',
     }).returning({ id: users.id })
     if (referrerId && inserted[0]) await attachReferral(inserted[0].id, referrerId)
+    if (inserted[0]) await awardSignupBonus(inserted[0].id)
 
     const created = await db
       .select({ id: users.id, email: users.email, name: users.name, role: users.role })

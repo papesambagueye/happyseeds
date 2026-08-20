@@ -1,5 +1,5 @@
 import 'server-only'
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { loyaltyEvents, orders, referralRewards } from '@/db/schemas/core'
 import {
@@ -8,15 +8,17 @@ import {
   countValidatedOrders,
 } from './rewards'
 import { getReferralOverview, listReferralRewards } from './referrals'
+import { awardBirthdayBonus } from './rewards'
 import { formatPrice } from '@/lib/utils'
 
 /**
  * Aggregated summary for the storefront "Mon compte" loyalty dashboard.
  */
 export async function getAccountSummary(userId: string) {
+  await awardBirthdayBonus(userId)
   const validated = await countValidatedOrders(userId)
 
-  const [eventsRes, ordersRes, referralOverview, referralRewardsList, bonusRes]: [
+  const [eventsRes, ordersRes, referralOverview, referralRewardsList, bonusRes, pointsRes]: [
     Array<typeof loyaltyEvents.$inferSelect>,
     Array<{
       id: string
@@ -28,12 +30,13 @@ export async function getAccountSummary(userId: string) {
     }>,
     Awaited<ReturnType<typeof getReferralOverview>>,
     Awaited<ReturnType<typeof listReferralRewards>>,
-    Array<{ amount: number }>
+    Array<{ amount: number }>,
+    Array<{ total: number }>
   ] = await Promise.all([
     db
       .select()
       .from(loyaltyEvents)
-      .where(eq(loyaltyEvents.userId, userId))
+      .where(and(eq(loyaltyEvents.userId, userId), sql`${loyaltyEvents.expiresAt} IS NULL OR ${loyaltyEvents.expiresAt} > now()`))
       .orderBy(desc(loyaltyEvents.createdAt))
       .limit(20),
     db
@@ -55,6 +58,10 @@ export async function getAccountSummary(userId: string) {
       .select({ amount: referralRewards.amount })
       .from(referralRewards)
       .where(eq(referralRewards.referrerId, userId)),
+    db
+      .select({ total: sql<number>`coalesce(sum(${loyaltyEvents.points}), 0)` })
+      .from(loyaltyEvents)
+      .where(and(eq(loyaltyEvents.userId, userId), sql`${loyaltyEvents.expiresAt} IS NULL OR ${loyaltyEvents.expiresAt} > now()`)),
   ])
 
   const loyalty = {
@@ -83,5 +90,6 @@ export async function getAccountSummary(userId: string) {
     referral: referralOverview,
     referralRewards: referralRewardsList,
     earnedBonus,
+    points: Number(pointsRes[0]?.total ?? 0),
   }
 }

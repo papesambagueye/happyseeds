@@ -5,10 +5,19 @@ import {
   flashSales,
   loyaltyEvents,
   orders,
+  users,
   voucherRedemptions,
   vouchers,
 } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
+
+export const POINTS_REWARD_TARGET = 30
+export const REFERRAL_BONUS_POINTS = 10
+export const POINTS_PER_1000_FCFA = 1
+export const SIGNUP_BONUS_POINTS = 5
+export const FIRST_ORDER_BONUS_POINTS = 5
+export const BIRTHDAY_BONUS_POINTS = 10
+export const FIRST_ORDER_MINIMUM = 300000
 
 // Loyalty: first 5 orders of a customer get 10% off automatically.
 export const LOYALTY_FREE_ORDERS = 5
@@ -38,12 +47,80 @@ export async function getLoyaltyDiscount(userId: string | null | undefined) {
 
 export async function recordLoyaltyEvent(input: {
   userId: string
-  type: 'first_orders' | 'voucher_bonus'
+  type: 'first_orders' | 'points' | 'voucher_bonus'
   points: number
   label: string
   orderId?: string
+  expiresAt?: Date
 }) {
   await db.insert(loyaltyEvents).values(input)
+}
+
+export async function awardSignupBonus(userId: string) {
+  const existing = await db.select({ id: loyaltyEvents.id }).from(loyaltyEvents).where(and(
+    eq(loyaltyEvents.userId, userId),
+    eq(loyaltyEvents.label, 'Bonus inscription'),
+  )).limit(1)
+  if (existing.length > 0) return false
+  const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+  await recordLoyaltyEvent({ userId, type: 'points', points: SIGNUP_BONUS_POINTS, label: 'Bonus inscription', expiresAt })
+  return true
+}
+
+export async function awardFirstOrderBonusOnValidation(orderId: string) {
+  const rows = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1)
+  const order = rows[0]
+  if (!order?.userId || order.status !== 'validated' || order.total < FIRST_ORDER_MINIMUM) return 0
+  const first = await db.select({ id: orders.id }).from(orders).where(and(
+    eq(orders.userId, order.userId), eq(orders.status, 'validated'),
+  )).orderBy(orders.createdAt).limit(1)
+  if (first[0]?.id !== order.id) return 0
+  const existing = await db.select({ id: loyaltyEvents.id }).from(loyaltyEvents).where(and(
+    eq(loyaltyEvents.userId, order.userId), eq(loyaltyEvents.label, 'Bonus première commande'),
+  )).limit(1)
+  if (existing.length > 0) return 0
+  await recordLoyaltyEvent({ userId: order.userId, type: 'first_orders', points: FIRST_ORDER_BONUS_POINTS, label: 'Bonus première commande', orderId })
+  return FIRST_ORDER_BONUS_POINTS
+}
+
+export async function awardBirthdayBonus(userId: string) {
+  const userRows = await db.select({ birthDate: users.birthDate }).from(users).where(eq(users.id, userId)).limit(1)
+  const birthDate = userRows[0]?.birthDate
+  if (!birthDate) return false
+  const today = new Date()
+  const birthday = new Date(`${birthDate}T00:00:00`)
+  if (Number.isNaN(birthday.getTime()) || birthday.getUTCMonth() !== today.getUTCMonth() || birthday.getUTCDate() !== today.getUTCDate()) return false
+  const label = `Bonus anniversaire ${today.getUTCFullYear()}`
+  const existing = await db.select({ id: loyaltyEvents.id }).from(loyaltyEvents).where(and(eq(loyaltyEvents.userId, userId), eq(loyaltyEvents.label, label))).limit(1)
+  if (existing.length > 0) return false
+  await recordLoyaltyEvent({ userId, type: 'points', points: BIRTHDAY_BONUS_POINTS, label })
+  return true
+}
+
+/** Credit purchase points once, after an order has been validated. */
+export async function awardPurchasePointsOnValidation(orderId: string) {
+  const rows = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1)
+  const order = rows[0]
+  if (!order?.userId || order.status !== 'validated') return 0
+
+  const existing = await db
+    .select({ id: loyaltyEvents.id })
+    .from(loyaltyEvents)
+    .where(and(eq(loyaltyEvents.orderId, orderId), eq(loyaltyEvents.type, 'points')))
+    .limit(1)
+  if (existing.length > 0) return 0
+
+  const points = Math.floor(order.total / 100000) * POINTS_PER_1000_FCFA
+  if (points <= 0) return 0
+
+  await recordLoyaltyEvent({
+    userId: order.userId,
+    type: 'points',
+    points,
+    label: `Achat validé #${order.orderNumber}`,
+    orderId,
+  })
+  return points
 }
 
 /** Active flash-sales resolved to a productId -> salePrice map. */

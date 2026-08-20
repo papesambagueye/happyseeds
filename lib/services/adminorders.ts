@@ -4,6 +4,7 @@ import { db } from '@/db'
 import { orderItems, orders, products, storeConfig } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
 import { awardReferralBonusOnValidation } from './referrals'
+import { awardFirstOrderBonusOnValidation, awardPurchasePointsOnValidation } from './rewards'
 
 export async function listAdminOrders(status?: string, q?: string) {
   const term = q?.trim()
@@ -80,6 +81,8 @@ export async function validateOrder(orderId: string) {
   // Award referral bonus (outside the tx, once per referred user's first order).
   try {
     await awardReferralBonusOnValidation(orderId)
+    await awardPurchasePointsOnValidation(orderId)
+    await awardFirstOrderBonusOnValidation(orderId)
   } catch (err) {
     console.error('Referral bonus failed for order', orderId, err)
   }
@@ -129,6 +132,8 @@ export async function updateOrderStatus(orderId: string, nextStatus: 'pending' |
   if (nextStatus === 'validated') {
     try {
       await awardReferralBonusOnValidation(orderId)
+      await awardPurchasePointsOnValidation(orderId)
+      await awardFirstOrderBonusOnValidation(orderId)
     } catch (error) {
       console.error('Referral bonus failed for order', orderId, error)
     }

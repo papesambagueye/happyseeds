@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { StoreShell } from '@/components/store/shell'
+import { ReferralPanel } from '@/components/store/referral-panel'
 import { getCurrentUser } from '@/lib/auth/session'
 import { getReferralOverview } from '@/lib/services/referrals'
 
@@ -19,16 +20,11 @@ export default async function ReferralPage() {
           <h1 className="mt-2 text-3xl font-bold">Invitez vos amis</h1>
         </div>
 
-        <div className="rounded-2xl border bg-card p-6">
-          <p className="text-sm text-muted-foreground">Partagez votre code et gagnez des avantages à chaque recommandation.</p>
-          <div className="mt-4 rounded-xl bg-primary/5 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-primary">Code de parrainage</p>
-            <p className="mt-2 text-2xl font-bold tracking-[0.2em]">{referralCode}</p>
-          </div>
-          <div className="mt-4 rounded-xl border p-4">
-            <p className="text-sm text-muted-foreground">Lien de partage</p>
-            <a href={referralLink} className="mt-2 block break-all text-sm font-medium text-primary">{referralLink}</a>
-          </div>
+        <ReferralPanel code={referralCode} link={referralLink} />
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-xl border bg-card p-4"><p className="text-2xl font-bold">{overview.referredCount}</p><p className="text-sm text-muted-foreground">Filleuls inscrits</p></div>
+          <div className="rounded-xl border bg-card p-4"><p className="text-2xl font-bold">{overview.qualifyingAirpodReferrals}/{overview.airpodReferralThreshold}</p><p className="text-sm text-muted-foreground">Filleuls à 5 000 FCFA pour l’offre AirPod</p></div>
+          <div className="rounded-xl border bg-card p-4"><p className="text-2xl font-bold">{overview.airpodRewarded ? 'Obtenu' : 'En cours'}</p><p className="text-sm text-muted-foreground">Maximum : 1 AirPod par parrain</p></div>
         </div>
       </div>
     </StoreShell>

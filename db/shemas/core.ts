@@ -16,6 +16,7 @@ export const users = pgTable(
       .$defaultFn(() => crypto.randomUUID()),
     email: text('email').notNull(),
     name: text('name'),
+    birthDate: text('birth_date'),
     passwordHash: text('password_hash').notNull(), // Web Crypto PBKDF2 hash (salt:hash)
     role: text('role', { enum: ['superadmin', 'admin', 'user'] })
       .notNull()
@@ -25,6 +26,7 @@ export const users = pgTable(
       .default('active'),
     referredBy: text('referred_by'), // id of the user who referred this account
     referralCode: text('referral_code'), // unique personal code shared to friends
+    airpodRewardedAt: timestamp('airpod_rewarded_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -163,6 +165,7 @@ export const loyaltyEvents = pgTable(
     points: integer('points').notNull().default(0), // points awarded (or discount in cents)
     label: text('label'), // human-readable description
     orderId: text('order_id').references(() => orders.id, { onDelete: 'set null' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [

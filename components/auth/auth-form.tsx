@@ -20,6 +20,8 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [birthDate, setBirthDate] = useState('')
+  const [referralCode, setReferralCode] = useState(ref ?? '')
   const [loading, setLoading] = useState(false)
 
   const submit = async (e: React.FormEvent) => {
@@ -27,13 +29,13 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     setLoading(true)
     const res = isLogin
       ? await apiClient.post('/api/auth/login', { email, password })
-      : await apiClient.post('/api/auth/register', { email, password, name, ref })
+      : await apiClient.post('/api/auth/register', { email, password, name, birthDate: birthDate || undefined, ref: referralCode.trim() || undefined })
     setLoading(false)
     if (res.success) {
       const data = res.data as { token?: string } | undefined
       if (data?.token) setSessionToken(data.token)
       toast.success(isLogin ? 'Bienvenue !' : 'Compte créé !')
-      router.push('/')
+      router.push(isLogin ? '/' : '/compte')
       router.refresh()
     } else {
       toast.error(res.error || 'Une erreur est survenue')
@@ -58,8 +60,22 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         )}
         {!isLogin && (
           <div className="space-y-1.5">
+            <Label htmlFor="referral-code">Code de parrainage (facultatif)</Label>
+            <Input id="referral-code" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())} placeholder="Ex. TABC1234" autoComplete="off" />
+            <p className="text-xs text-muted-foreground">Vous pouvez le demander à la personne qui vous a invité.</p>
+          </div>
+        )}
+        {!isLogin && (
+          <div className="space-y-1.5">
             <Label htmlFor="name">{t('register_name')}</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} autoComplete="name" />
+          </div>
+        )}
+        {!isLogin && (
+          <div className="space-y-1.5">
+            <Label htmlFor="birth-date">Date d’anniversaire (facultatif)</Label>
+            <Input id="birth-date" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} autoComplete="bday" />
+            <p className="text-xs text-muted-foreground">Recevez 10 points le jour de votre anniversaire.</p>
           </div>
         )}
         <div className="space-y-1.5">

@@ -192,6 +192,7 @@ export function Header() {
             {me && <MobileLink href="/commandes" label={t('nav_orders')} onNavigate={() => setOpen(false)} />}
             <MobileLink href="/contact" label={t('contact_title')} onNavigate={() => setOpen(false)} />
             <MobileLink href="/favoris" label={t('nav_wishlist')} onNavigate={() => setOpen(false)} />
+            {me && <MobileLink href="/compte" label="Mon compte" onNavigate={() => setOpen(false)} />}
             {!me && (
               <div className="mt-2 flex gap-2">
                 <Button asChild className="flex-1"><Link href="/login" onClick={() => setOpen(false)}>{t('nav_login')}</Link></Button>
