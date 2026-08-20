@@ -88,11 +88,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-slate-50 to-sky-50 lg:flex">
-      <aside className="glass-panel border-b lg:min-h-screen lg:w-72 lg:border-b-0 lg:border-r lg:rounded-r-[28px] lg:shadow-[0_20px_60px_rgba(76,29,149,0.08)]">
+    <div className="min-h-screen bg-[#F2F2F2] lg:flex">
+      <aside className="glass-panel border-b lg:min-h-screen lg:w-72 lg:border-b-0 lg:border-r lg:rounded-r-[28px] lg:shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
         <div className="flex items-center justify-between px-4 py-4 lg:py-5">
-          <Link href="/admin" className="flex items-center gap-2 font-bold text-slate-900">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white shadow-lg shadow-violet-500/25">
+          <Link href="/admin" className="flex items-center gap-2 font-bold text-black">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#007BFF] text-white shadow-lg shadow-blue-500/25">
               <Store className="h-4 w-4" />
             </span>
             <span className="text-lg">Admin</span>
@@ -110,8 +110,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   'flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
                   active
-                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/20'
-                    : 'text-slate-700 hover:bg-white/80 hover:text-violet-700',
+                    ? 'bg-[#007BFF] text-white shadow-lg shadow-blue-500/20'
+                    : 'text-black hover:bg-white hover:text-[#007BFF]',
                 )}
               >
                 <Icon className="h-4 w-4" /> <span className="whitespace-nowrap">{item.label}</span>
@@ -119,11 +119,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             )
           })}
         </nav>
-        <div className="hidden border-t border-slate-200/80 bg-white/40 px-4 py-3 lg:block">
+        <div className="hidden border-t border-[#D9D9D9] bg-white px-4 py-3 lg:block">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-semibold text-slate-800">{me?.name ?? me?.email}</div>
-              <div className="mt-1 inline-flex rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-violet-700">
+              <div className="text-sm font-semibold text-black">{me?.name ?? me?.email}</div>
+              <div className="mt-1 inline-flex rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-[#007BFF]">
                 {me?.role}
               </div>
             </div>

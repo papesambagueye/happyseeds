@@ -10,16 +10,16 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/30',
+          'bg-[#007BFF] text-white shadow-md shadow-blue-500/25 hover:-translate-y-0.5 hover:bg-[#0069D9] hover:shadow-lg',
         destructive:
-          'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-lg shadow-red-500/25 hover:-translate-y-0.5 hover:shadow-red-500/30 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
+          'bg-[#E30613] text-white shadow-md shadow-red-500/25 hover:-translate-y-0.5 hover:bg-[#C80510] hover:shadow-lg focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
         outline:
-          'border border-violet-200 bg-white/70 text-slate-700 shadow-sm backdrop-blur-sm hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
+          'border border-[#007BFF]/35 bg-white text-black shadow-sm hover:-translate-y-0.5 hover:border-[#007BFF] hover:bg-[#F2F2F2] dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
         secondary:
-          'bg-slate-900 text-white shadow-md hover:-translate-y-0.5 hover:bg-slate-800',
+          'bg-black text-white shadow-md hover:-translate-y-0.5 hover:bg-[#222222]',
         ghost:
-          'hover:bg-violet-50 hover:text-violet-700 dark:hover:bg-accent/50',
-        link: 'text-violet-700 underline-offset-4 hover:underline',
+          'hover:bg-[#F2F2F2] hover:text-[#007BFF] dark:hover:bg-accent/50',
+        link: 'text-[#007BFF] underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',

@@ -22,24 +22,24 @@ export default async function HomePage() {
   return (
     <StoreShell>
       {slides.length > 0 && <HeroCarousel slides={slides} shopLabel="Découvrir" />}
-      <section className="relative overflow-hidden bg-gradient-to-r from-slate-950 via-violet-950 to-slate-900 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(168,85,247,0.35),transparent_20%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.35),transparent_22%)]" />
+      <section className="relative overflow-hidden bg-black text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(0,123,255,0.28),transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(227,6,19,0.2),transparent_22%)]" />
         <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-16 md:grid-cols-2 md:items-center md:py-24">
           <div>
-            <p className="inline-flex rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-200">
+            <p className="inline-flex rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-white">
               TECH 221
             </p>
             <h1 className="mt-5 text-4xl font-black leading-tight sm:text-5xl">
               La tech qu&apos;on aime, au bon prix.
             </h1>
-            <p className="mt-4 max-w-xl text-base text-slate-300">
+            <p className="mt-4 max-w-xl text-base text-white/75">
               Smartphones, audio, accessoires et gadgets premium conçus pour faciliter votre quotidien.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="shadow-[0_18px_35px_rgba(168,85,247,0.35)]">
+              <Button asChild size="lg" className="shadow-[0_18px_35px_rgba(0,123,255,0.35)]">
                 <Link href="/catalogue">Découvrir la boutique</Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-white/25 bg-white/5 text-white hover:bg-white/10">
+              <Button asChild variant="destructive" size="lg">
                 <Link href="/promos">Voir les promos</Link>
               </Button>
             </div>
@@ -79,7 +79,7 @@ export default async function HomePage() {
           {categories.map((category) => (
             <Link key={category.title} href={category.href} className="soft-card block rounded-2xl p-5">
               <div className="text-sm text-muted-foreground">{category.titleEn}</div>
-              <div className="mt-3 text-xl font-semibold text-slate-900">{category.title}</div>
+              <div className="mt-3 text-xl font-semibold text-black">{category.title}</div>
             </Link>
           ))}
         </div>
@@ -104,8 +104,8 @@ export default async function HomePage() {
 function FeatureCard({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
     <div className="soft-card rounded-2xl p-5">
-      <div className="mb-3 inline-flex rounded-xl bg-violet-100 p-2 text-violet-700">{icon}</div>
-      <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+      <div className="mb-3 inline-flex rounded-xl bg-[#F2F2F2] p-2 text-[#007BFF]">{icon}</div>
+      <h3 className="text-lg font-semibold text-black">{title}</h3>
       <p className="mt-2 text-sm text-muted-foreground">{text}</p>
     </div>
   )

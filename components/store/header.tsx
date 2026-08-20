@@ -83,9 +83,9 @@ export function Header() {
               <Image src={logoUrl} alt={siteName ?? 'Logo'} fill className="object-cover" unoptimized />
             </div>
           ) : (
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Store className="h-5 w-5" />
-            </span>
+            <div className="relative h-9 w-9 overflow-hidden rounded-xl bg-white">
+              <Image src="/logo.png" alt="Logo TECH 221" fill className="object-contain" unoptimized />
+            </div>
           )}
           <span>{siteName ?? 'TECH\u00A0221'}</span>
         </Link>
