@@ -19,11 +19,23 @@ export default async function HomePage() {
     getActiveSlides().catch(() => []),
     getFeaturedProducts().catch(() => []),
   ])
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'OnlineStore',
+    name: 'Tech221',
+    url: 'https://happyseeds-eight.vercel.app/',
+    description: 'Boutique en ligne de smartphones, ordinateurs, audio et accessoires high-tech au Senegal.',
+    areaServed: 'SN',
+  }
+
   return (
-    <StoreShell>
-      <div className="border-b border-black bg-[#E30613] px-4 py-2 text-center text-xs font-bold uppercase tracking-[0.16em] text-white">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <StoreShell>
+        <div className="border-b border-black bg-[#E30613] px-4 py-2 text-center text-xs font-bold uppercase tracking-[0.16em] text-white">
         Livraison rapide · offres exclusives · assistance WhatsApp
-      </div>
+        </div>
       {slides.length > 0 && <HeroCarousel slides={slides} shopLabel="Découvrir" />}
       <section className="relative overflow-hidden bg-black text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(0,123,255,0.28),transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(227,6,19,0.2),transparent_22%)]" />
@@ -100,7 +112,8 @@ export default async function HomePage() {
           {featuredProducts.length === 0 ? <p className="col-span-full text-muted-foreground">Aucun produit en vedette.</p> : featuredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
         </div>
       </section>
-    </StoreShell>
+      </StoreShell>
+    </>
   )
 }
 
