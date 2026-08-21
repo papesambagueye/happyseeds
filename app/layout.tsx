@@ -4,7 +4,7 @@ import { I18nProvider } from '@/lib/i18n'
 import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://happyseeds-eight.vercel.app'),
+  metadataBase: new URL('https://ndartech221.vercel.app'),
   title: {
     default: 'Tech221 | Boutique high-tech au Senegal',
     template: '%s | Tech221',
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'fr_SN',
-    url: 'https://happyseeds-eight.vercel.app/',
+    url: 'https://ndartech221.vercel.app/',
     siteName: 'Tech221',
     title: 'Tech221 | Boutique high-tech au Senegal',
     description: 'Smartphones, ordinateurs, audio et accessoires high-tech au meilleur prix.',
