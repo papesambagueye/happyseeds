@@ -208,7 +208,7 @@ export function Header() {
 
 function NavLink({ href, label, active }: { href: string; label: string; active: boolean }) {
   return (
-    <Link href={href} className={`rounded-md px-3 py-2 font-medium hover:bg-muted ${active ? 'text-primary' : ''}`}>
+    <Link href={href} className={`border-b-2 border-transparent px-3 py-2 font-medium transition-colors hover:border-[#007BFF] hover:bg-[#E8F2FF] hover:text-[#0069D9] ${active ? 'border-[#007BFF] bg-[#E8F2FF] text-primary' : ''}`}>
       {label}
     </Link>
   )
@@ -216,7 +216,7 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
 
 function MobileLink({ href, label, onNavigate }: { href: string; label: string; onNavigate: () => void }) {
   return (
-    <Link href={href} onClick={onNavigate} className="rounded-md px-3 py-2 font-medium hover:bg-muted">
+    <Link href={href} onClick={onNavigate} className="rounded-md px-3 py-2 font-medium transition-colors hover:bg-[#E8F2FF] hover:text-[#0069D9]">
       {label}
     </Link>
   )

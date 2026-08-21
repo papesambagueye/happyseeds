@@ -61,7 +61,7 @@ export default async function CataloguePage({
             <option value="price_asc">Prix croissant</option>
             <option value="price_desc">Prix décroissant</option>
           </select>
-          <button type="submit" className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
+          <button type="submit" className="h-10 cursor-pointer rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-[#0069D9] hover:shadow-md">
             Filtrer
           </button>
         </form>

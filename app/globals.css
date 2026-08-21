@@ -47,6 +47,17 @@ textarea {
   font: inherit;
 }
 
+button:not(:disabled),
+a {
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+
 ::selection {
   background: rgba(124, 58, 237, 0.2);
 }

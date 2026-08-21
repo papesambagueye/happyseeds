@@ -81,9 +81,9 @@ export default function CartPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center rounded-lg border">
-                        <button onClick={() => setQuantity(item.productId, Math.max(1, item.quantity - 1))} className="px-2 py-1">−</button>
+                        <button onClick={() => setQuantity(item.productId, Math.max(1, item.quantity - 1))} className="cursor-pointer rounded px-2 py-1 transition hover:bg-muted hover:text-primary">−</button>
                         <span className="min-w-8 text-center">{item.quantity}</span>
-                        <button onClick={() => setQuantity(item.productId, item.quantity + 1)} className="px-2 py-1">+</button>
+                        <button onClick={() => setQuantity(item.productId, item.quantity + 1)} className="cursor-pointer rounded px-2 py-1 transition hover:bg-muted hover:text-primary">+</button>
                       </div>
                       <Button variant="outline" onClick={() => remove(item.productId)}>Supprimer</Button>
                     </div>

@@ -51,7 +51,7 @@ export function HeroCarousel({ slides, shopLabel }: { slides: Slide[]; shopLabel
                   <p className="mt-3 text-sm text-white/85 sm:text-lg">{pickLocal(locale, slide.subtitle, slide.subtitleEn)}</p>
                 )}
                 <div className="mt-6">
-                  <Button asChild size="lg" className="bg-white text-black hover:bg-white/90">
+                  <Button asChild size="lg" className="bg-white text-black shadow-lg shadow-black/20 hover:-translate-y-0.5 hover:bg-white hover:shadow-xl">
                     <Link href={slide.link ?? '/catalogue'}>{shopLabel}</Link>
                   </Button>
                 </div>
@@ -63,15 +63,15 @@ export function HeroCarousel({ slides, shopLabel }: { slides: Slide[]; shopLabel
 
       {slides.length > 1 && (
         <>
-          <button onClick={prev} className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-white backdrop-blur hover:bg-white/25" aria-label="Previous">
+          <button onClick={prev} className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-black/35 text-white shadow-lg backdrop-blur transition hover:scale-110 hover:bg-black/70" aria-label="Previous">
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <button onClick={next} className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-white backdrop-blur hover:bg-white/25" aria-label="Next">
+          <button onClick={next} className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-black/35 text-white shadow-lg backdrop-blur transition hover:scale-110 hover:bg-black/70" aria-label="Next">
             <ChevronRight className="h-5 w-5" />
           </button>
           <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
             {slides.map((s, i) => (
-              <button key={s.id} onClick={() => setIndex(i)} className={`h-2 rounded-full transition-all ${i === index ? 'w-6 bg-white' : 'w-2 bg-white/50'}`} aria-label={`Slide ${i + 1}`} />
+              <button key={s.id} onClick={() => setIndex(i)} className={`h-2 cursor-pointer rounded-full transition-all hover:bg-white ${i === index ? 'w-6 bg-white shadow-[0_0_0_2px_rgba(255,255,255,0.35)]' : 'w-2 bg-white/60'}`} aria-label={`Slide ${i + 1}`} />
             ))}
           </div>
         </>
