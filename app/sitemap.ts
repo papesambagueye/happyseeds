@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-const siteUrl = 'https://happyseeds-eight.vercel.app'
+const siteUrl = 'https://tech221.vercel.app'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const routes = ['/', '/catalogue', '/promos', '/contact', '/login', '/register']
