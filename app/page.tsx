@@ -24,7 +24,7 @@ export default async function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'OnlineStore',
     name: 'Tech221',
-    url: 'https://tech221.vercel.app/',
+    url: 'https://happyseeds-eight.vercel.app/',
     description: 'Boutique en ligne de smartphones, ordinateurs, audio et accessoires high-tech au Senegal.',
     areaServed: 'SN',
   }
