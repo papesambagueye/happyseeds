@@ -51,9 +51,9 @@ export default async function AccountPage() {
             <h2 className="text-lg font-semibold">Comment gagner des points</h2>
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
               <li><strong className="text-foreground">1 point</strong> par tranche de 1 000 FCFA sur une commande validée.</li>
-              <li><strong className="text-foreground">5 points</strong> à l’inscription, puis 5 points à la première commande d’au moins 8 000 FCFA.</li>
+              <li><strong className="text-foreground">5 points</strong> à l’inscription, puis 5 points à la première commande d’au moins 10 000 FCFA.</li>
               <li><strong className="text-foreground">30 / 50 / 100 points</strong> donnent respectivement un produit jusqu’à 5 000 / 10 000 / 15 000 FCFA.</li>
-              <li><strong className="text-foreground">10 points</strong> pour le premier parrainage validé et 10 points le jour de votre anniversaire.</li>
+              <li><strong className="text-foreground">5 points</strong> lorsque les commandes validées de vos filleuls atteignent 6 000 FCFA cumulés, une seule fois, et 5 points le jour de votre anniversaire.</li>
             </ul>
             <Link href="/parrainage" className="mt-5 inline-flex text-sm font-medium text-primary hover:underline">Inviter un proche</Link>
           </div>

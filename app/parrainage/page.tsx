@@ -23,8 +23,8 @@ export default async function ReferralPage() {
         <ReferralPanel code={referralCode} link={referralLink} />
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <div className="rounded-xl border bg-card p-4"><p className="text-2xl font-bold">{overview.referredCount}</p><p className="text-sm text-muted-foreground">Filleuls inscrits</p></div>
-          <div className="rounded-xl border bg-card p-4"><p className="text-2xl font-bold">{overview.qualifyingAirpodReferrals}/{overview.airpodReferralThreshold}</p><p className="text-sm text-muted-foreground">Filleuls à 5 000 FCFA pour l’offre AirPod</p></div>
-          <div className="rounded-xl border bg-card p-4"><p className="text-2xl font-bold">{overview.airpodRewarded ? 'Obtenu' : 'En cours'}</p><p className="text-sm text-muted-foreground">Maximum : 1 AirPod par parrain</p></div>
+          <div className="rounded-xl border bg-card p-4"><p className="text-2xl font-bold">{(overview.qualifyingReferralTotal / 100).toLocaleString('fr-FR')} FCFA</p><p className="text-sm text-muted-foreground">Total cumulé des commandes de vos filleuls</p></div>
+          <div className="rounded-xl border bg-card p-4"><p className="text-2xl font-bold">+5 points</p><p className="text-sm text-muted-foreground">À partir de 6 000 FCFA cumulés, une seule fois</p></div>
         </div>
       </div>
     </StoreShell>

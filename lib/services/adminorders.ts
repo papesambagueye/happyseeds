@@ -3,7 +3,7 @@ import { desc, eq, ilike, or, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { orderItems, orders, products, storeConfig } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
-import { awardReferralBonusOnValidation } from './referrals'
+import { awardReferralBonusOnValidation, awardReferralPointsForOrder } from './referrals'
 import { awardFirstOrderBonusOnValidation, awardPurchasePointsOnValidation } from './rewards'
 
 export async function listAdminOrders(status?: string, q?: string) {
@@ -81,6 +81,7 @@ export async function validateOrder(orderId: string) {
   // Award referral bonus (outside the tx, once per referred user's first order).
   try {
     await awardReferralBonusOnValidation(orderId)
+    await awardReferralPointsForOrder(orderId)
     await awardPurchasePointsOnValidation(orderId)
     await awardFirstOrderBonusOnValidation(orderId)
   } catch (err) {
@@ -132,6 +133,7 @@ export async function updateOrderStatus(orderId: string, nextStatus: 'pending' |
   if (nextStatus === 'validated') {
     try {
       await awardReferralBonusOnValidation(orderId)
+      await awardReferralPointsForOrder(orderId)
       await awardPurchasePointsOnValidation(orderId)
       await awardFirstOrderBonusOnValidation(orderId)
     } catch (error) {

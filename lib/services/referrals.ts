@@ -9,13 +9,13 @@ import {
   vouchers,
 } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
-import { REFERRAL_BONUS_POINTS } from './rewards'
+import { recordLoyaltyEvent } from './rewards'
 
 // Reward granted to a referrer when a referred friend's first order is validated.
 export const REFERRAL_BONUS_CENTS = 1000 // 10 FCFA by default — configurable via store_config
 export const REFERRAL_VOUCHER_TITLE = 'Récompense parrainage'
-export const AIRPOD_REFERRAL_THRESHOLD = 5
-export const AIRPOD_MINIMUM_ORDER = 500000
+export const REFERRAL_POINTS_TARGET = 600000
+export const REFERRAL_POINTS_BONUS = 5
 
 /** Deterministic, unique personal referral code from a user id. */
 export function buildReferralCode(userId: string): string {
@@ -89,13 +89,11 @@ export async function getReferralOverview(userId: string) {
     .from(referralRewards)
     .where(eq(referralRewards.referrerId, userId))
 
-  const qualifyingAirpodReferrals = await db
-    .select({ id: referralRewards.id })
-    .from(referralRewards)
-    .innerJoin(orders, eq(referralRewards.orderId, orders.id))
-    .where(and(eq(referralRewards.referrerId, userId), sql`${orders.total} >= ${AIRPOD_MINIMUM_ORDER}`))
-
-  const owner = await db.select({ airpodRewardedAt: users.airpodRewardedAt }).from(users).where(eq(users.id, userId)).limit(1)
+  const qualifyingReferralTotal = await db
+    .select({ total: sql<number>`coalesce(sum(${orders.total}), 0)` })
+    .from(orders)
+    .innerJoin(users, eq(orders.userId, users.id))
+    .where(and(eq(users.referredBy, userId), eq(orders.status, 'validated')))
 
   const earnable = referred.length - rewards.length
   const earnedCents = rewards.reduce((sum: number, reward: { amount: number }) => sum + reward.amount, 0)
@@ -108,9 +106,8 @@ export async function getReferralOverview(userId: string) {
     earnable,
     earnedCents,
     bonusCents: REFERRAL_BONUS_CENTS,
-    qualifyingAirpodReferrals: qualifyingAirpodReferrals.length,
-    airpodRewarded: Boolean(owner[0]?.airpodRewardedAt),
-    airpodReferralThreshold: AIRPOD_REFERRAL_THRESHOLD,
+    qualifyingReferralTotal: Number(qualifyingReferralTotal[0]?.total ?? 0),
+    referralPointsTarget: REFERRAL_POINTS_TARGET,
   }
 }
 
@@ -163,13 +160,6 @@ export async function awardReferralBonusOnValidation(orderId: string) {
     .limit(1)
   if (already.length > 0) return null
 
-  const previousRewards = await db
-    .select({ id: referralRewards.id })
-    .from(referralRewards)
-    .where(eq(referralRewards.referrerId, referrerId))
-    .limit(1)
-  const isFirstReferral = previousRewards.length === 0
-
   // Generate a unique bonus voucher code.
   const code = `PARRAIN-${order.orderNumber.replace(/\D/g, '').slice(-6)}`
   const voucher = await db
@@ -192,44 +182,42 @@ export async function awardReferralBonusOnValidation(orderId: string) {
     amount: REFERRAL_BONUS_CENTS,
   })
 
-  if (isFirstReferral) {
-    await db.insert(loyaltyEvents).values({
-      userId: referrerId,
-      type: 'voucher_bonus',
-      points: REFERRAL_BONUS_POINTS,
-      label: `Premier parrainage (${order.userId.slice(0, 8)})`,
-      orderId,
-    })
-  }
-
-  await awardAirpodReferralReward(referrerId)
-
   return { code, amount: REFERRAL_BONUS_CENTS, referrerId }
 }
 
-/** Grant one AirPod claim after five qualifying referred first orders. */
-export async function awardAirpodReferralReward(referrerId: string) {
-  const owner = await db.select({ airpodRewardedAt: users.airpodRewardedAt }).from(users).where(eq(users.id, referrerId)).limit(1)
-  if (!owner[0] || owner[0].airpodRewardedAt) return false
+/** Award 5 points once when all referred users reach 6,000 FCFA cumulatively. */
+export async function awardReferralPoints(referrerId: string, orderId: string) {
+  const existing = await db.select({ id: loyaltyEvents.id }).from(loyaltyEvents).where(and(
+    eq(loyaltyEvents.userId, referrerId),
+    eq(loyaltyEvents.label, 'Bonus parrainage : 6 000 FCFA cumulés par les filleuls'),
+  )).limit(1)
+  if (existing.length > 0) return false
 
-  const qualifying = await db
-    .select({ id: referralRewards.id })
-    .from(referralRewards)
-    .innerJoin(orders, eq(referralRewards.orderId, orders.id))
-    .where(and(eq(referralRewards.referrerId, referrerId), sql`${orders.total} >= ${AIRPOD_MINIMUM_ORDER}`))
-  if (qualifying.length < AIRPOD_REFERRAL_THRESHOLD) return false
+  const totals = await db
+    .select({ total: sql<number>`coalesce(sum(${orders.total}), 0)` })
+    .from(orders)
+    .innerJoin(users, eq(orders.userId, users.id))
+    .where(and(eq(users.referredBy, referrerId), eq(orders.status, 'validated')))
+  if (Number(totals[0]?.total ?? 0) < REFERRAL_POINTS_TARGET) return false
 
-  const updated = await db.update(users)
-    .set({ airpodRewardedAt: sql`now()`, updatedAt: sql`now()` })
-    .where(and(eq(users.id, referrerId), sql`${users.airpodRewardedAt} IS NULL`))
-    .returning({ id: users.id })
-  if (updated.length === 0) return false
-
-  await db.insert(loyaltyEvents).values({
+  await recordLoyaltyEvent({
     userId: referrerId,
-    type: 'voucher_bonus',
-    points: 0,
-    label: 'AirPod offert : 5 filleuls ont dépensé au moins 5 000 FCFA',
+    type: 'points',
+    points: REFERRAL_POINTS_BONUS,
+    label: 'Bonus parrainage : 6 000 FCFA cumulés par les filleuls',
+    orderId,
   })
   return true
+}
+
+export async function awardReferralPointsForOrder(orderId: string) {
+  const rows = await db
+    .select({ referrerId: users.referredBy })
+    .from(orders)
+    .innerJoin(users, eq(orders.userId, users.id))
+    .where(eq(orders.id, orderId))
+    .limit(1)
+  const referrerId = rows[0]?.referrerId
+  if (!referrerId) return false
+  return awardReferralPoints(referrerId, orderId)
 }
