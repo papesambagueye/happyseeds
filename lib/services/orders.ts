@@ -3,7 +3,6 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { orderItems, orders, products, storeConfig, voucherRedemptions } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
-import { getDeliveryFee } from '@/lib/delivery'
 import {
   getFlashSalePriceMap,
   getLoyaltyDiscount,
@@ -81,9 +80,9 @@ export function buildOrderMessage(
     )
   }
   lines.push('──────────────────')
-  lines.push(`Mode : ${deliveryRequested ? 'Livraison' : 'Retrait sur place'}`)
+  lines.push(deliveryRequested ? 'Mode : Livraison' : 'Mode : Retrait sur place')
   if (deliveryRequested && deliveryAddress) lines.push(`Adresse : ${deliveryAddress}`)
-  lines.push(`Livraison : ${deliveryFee === 0 ? 'Offerte' : formatPrice(deliveryFee, currency)}`)
+  if (deliveryRequested) lines.push('Frais de livraison : à convenir sur WhatsApp')
   lines.push(`*TOTAL : ${formatPrice(total, currency)}*`)
   return lines.join('\n')
 }
@@ -177,8 +176,8 @@ export async function createOrder(input: OrderInput) {
     discount += d
   }
 
-  const deliveryFee = deliveryRequested ? getDeliveryFee(subtotal) : 0
-  const total = Math.max(0, subtotal - discount) + deliveryFee
+  const deliveryFee = 0
+  const total = Math.max(0, subtotal - discount)
   const currency = priceMap.values().next().value?.currency ?? 'FCFA'
   const orderNumber = `CMD-${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 90 + 10)}`
 

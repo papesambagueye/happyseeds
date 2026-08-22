@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { useCart } from '@/lib/stores/cart'
 import { apiClient } from '@/lib/request'
 import { formatPrice } from '@/lib/utils'
-import { DELIVERY_FEE, FREE_DELIVERY_THRESHOLD, getDeliveryFee } from '@/lib/delivery'
 
 export default function CartPage() {
   const router = useRouter()
@@ -24,7 +23,6 @@ export default function CartPage() {
   const [deliveryAddress, setDeliveryAddress] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const deliveryFee = deliveryRequested ? getDeliveryFee(subtotal) : 0
 
   const placeWhatsAppOrder = async () => {
     if (!customerName.trim() || !customerPhone.trim()) {
@@ -112,13 +110,13 @@ export default function CartPage() {
               </div>
               <div className="mt-2 flex items-center justify-between text-sm text-muted-foreground">
                 <span>Livraison</span>
-                <span>{deliveryFee === 0 ? 'Offerte' : formatPrice(DELIVERY_FEE, 'FCFA')}</span>
+                <span>{deliveryRequested ? 'À convenir sur WhatsApp' : 'Retrait sur place'}</span>
               </div>
               <div className="mt-4 border-t pt-4 flex items-center justify-between text-lg font-bold">
                 <span>Total</span>
-                <span>{formatPrice(subtotal + deliveryFee, 'FCFA')}</span>
+                <span>{formatPrice(subtotal, 'FCFA')}</span>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">Livraison offerte au-delà de {formatPrice(FREE_DELIVERY_THRESHOLD, 'FCFA')}.</p>
+              <p className="mt-2 text-xs text-muted-foreground">Le montant et les détails de livraison seront confirmés directement sur WhatsApp.</p>
               <div className="mt-6 space-y-3">
                 <input
                   value={customerName}
