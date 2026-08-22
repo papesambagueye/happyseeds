@@ -76,8 +76,8 @@ export function Header() {
         paddingRight: 'calc(env(safe-area-inset-right, 0px) + 0.5rem)',
       }}
     >
-      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 font-bold text-lg">
+      <div className="mx-auto flex min-w-0 max-w-7xl items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4">
+        <Link href="/" className="flex min-w-0 shrink items-center gap-2 font-bold text-lg">
           {logoUrl ? (
             <div className="relative h-9 w-9 overflow-hidden rounded-xl bg-transparent">
               <Image src={logoUrl} alt={siteName ?? 'Logo'} fill className="object-cover" unoptimized />
@@ -87,7 +87,7 @@ export function Header() {
               <Image src="/logo.png" alt="Logo TECH 221" fill className="scale-[2.8] object-contain" unoptimized />
             </div>
           )}
-          <span>{siteName ?? 'TECH\u00A0221'}</span>
+          <span className="truncate">{siteName ?? 'TECH\u00A0221'}</span>
         </Link>
 
         <form onSubmit={submitSearch} className="ml-2 hidden flex-1 items-center gap-2 md:flex">
@@ -102,7 +102,7 @@ export function Header() {
           </div>
         </form>
 
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
           <button
             onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')}
             className="rounded-md px-2 py-1 text-sm font-medium text-muted-foreground hover:bg-muted"

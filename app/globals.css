@@ -30,6 +30,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   background: #ffffff;
   color: var(--foreground);
   font-family: 'Rubik', "Avenir Next", "Century Gothic", "Segoe UI", sans-serif;
@@ -54,6 +55,7 @@ input,
 select,
 textarea {
   font: inherit;
+  max-width: 100%;
 }
 
 button:not(:disabled),

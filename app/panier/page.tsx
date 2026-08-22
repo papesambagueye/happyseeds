@@ -74,18 +74,18 @@ export default function CartPage() {
           <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_0.8fr]">
             <div className="space-y-4">
               {items.map((item) => (
-                <div key={item.productId} className="flex gap-4 rounded-2xl border bg-card p-3">
+                <div key={item.productId} className="flex min-w-0 flex-col gap-3 rounded-2xl border bg-card p-3 sm:flex-row sm:gap-4">
                   <div className="relative h-24 w-24 overflow-hidden rounded-xl border bg-muted">
                     {item.image && (
                       <Image src={item.image} alt={item.name} fill className="object-cover" unoptimized />
                     )}
                   </div>
-                  <div className="flex flex-1 items-center justify-between gap-3">
-                    <div>
+                  <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
                       <div className="font-semibold">{item.name}</div>
                       <div className="text-sm text-muted-foreground">{formatPrice(item.unitPrice, item.currency)}</div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start">
                       <div className="flex items-center rounded-lg border">
                         <button onClick={() => setQuantity(item.productId, Math.max(1, item.quantity - 1))} className="cursor-pointer rounded px-2 py-1 transition hover:bg-muted hover:text-primary">−</button>
                         <span className="min-w-8 text-center">{item.quantity}</span>

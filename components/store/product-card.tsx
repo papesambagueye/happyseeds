@@ -105,7 +105,7 @@ export function ProductCard({ product }: { product: StoreProduct }) {
         </div>
       </Link>
 
-      <div className="flex min-w-0 flex-1 flex-col p-4">
+      <div className="flex min-w-0 flex-1 flex-col p-3 sm:p-4">
         <Link href={`/produit/${product.slug}`}>
           <h3 className="line-clamp-2 break-words leading-snug font-semibold text-black">{localName}</h3>
         </Link>

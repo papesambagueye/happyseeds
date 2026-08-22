@@ -108,7 +108,7 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           {featuredProducts.length === 0 ? <p className="col-span-full text-muted-foreground">Aucun produit en vedette.</p> : featuredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
         </div>
       </section>
