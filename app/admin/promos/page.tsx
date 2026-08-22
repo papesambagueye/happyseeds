@@ -110,7 +110,7 @@ export default function AdminPromos() {
 
   return (
     <AdminShell>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Ventes flash</h1>
           <p className="mt-1 text-sm text-muted-foreground">{loading ? 'Chargement…' : `${activeCount} active(s) sur ${rows.length}`}</p>
@@ -129,13 +129,13 @@ export default function AdminPromos() {
             ) : rows.map((r) => (
               <TableRow key={r.id}>
                 <TableCell>
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <div className="relative h-10 w-10 overflow-hidden rounded-md bg-muted">
                       {r.productImage && <Image src={r.productImage} alt={r.productName} fill className="object-cover" unoptimized />}
                     </div>
-                    <div>
-                      <div className="font-medium">{r.productName}</div>
-                      {r.label && <div className="text-xs text-muted-foreground">{r.label}</div>}
+                    <div className="min-w-0">
+                      <div className="break-words font-medium">{r.productName}</div>
+                      {r.label && <div className="break-words text-xs text-muted-foreground">{r.label}</div>}
                     </div>
                   </div>
                 </TableCell>

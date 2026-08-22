@@ -56,12 +56,12 @@ export default function AdminMessages() {
           <p className="py-10 text-center text-muted-foreground">{query ? 'Aucun message ne correspond à la recherche.' : 'Aucun message.'}</p>
         ) : messages.map((m) => (
           <button key={m.id} onClick={() => openMsg(m)}
-            className="flex w-full items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 text-left hover:border-primary">
+            className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 text-left hover:border-primary">
             <div className="flex items-center gap-3">
               {m.read === 1 ? <MailOpen className="h-5 w-5 text-muted-foreground" /> : <Mail className="h-5 w-5 text-primary" />}
-              <div>
-                <div className="font-medium">{m.subject} <span className="text-muted-foreground">— {m.name}</span></div>
-                <div className="text-sm text-muted-foreground">{m.email} · {formatDate(m.createdAt)}</div>
+              <div className="min-w-0">
+                <div className="break-words font-medium">{m.subject} <span className="text-muted-foreground">— {m.name}</span></div>
+                <div className="break-words text-sm text-muted-foreground">{m.email} · {formatDate(m.createdAt)}</div>
               </div>
             </div>
             {m.read !== 1 && <Badge variant="secondary">Non lu</Badge>}

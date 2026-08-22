@@ -128,9 +128,9 @@ export default function AdminProducts() {
 
   return (
     <AdminShell>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Produits</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
           <SearchInput value={query} onSearch={(value) => { setQuery(value); load(value) }} placeholder="Rechercher produits…" className="w-56 sm:w-72" />
           <Button onClick={openNew}><Plus className="mr-1 h-4 w-4" /> Nouveau produit</Button>
         </div>

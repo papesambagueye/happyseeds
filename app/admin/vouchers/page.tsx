@@ -120,7 +120,7 @@ export default function AdminVouchers() {
 
   return (
     <AdminShell>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Bons d&apos;achat &amp; fidélité</h1>
           <p className="mt-1 text-sm text-muted-foreground">{loading ? 'Chargement…' : `${rows?.length ?? 0} code(s) promo`}</p>
@@ -186,7 +186,7 @@ export default function AdminVouchers() {
                   <TableCell>{claim.points} Pts</TableCell>
                   <TableCell className="font-mono text-xs">{claim.voucherCode}</TableCell>
                   <TableCell><Badge variant={claim.status === 'claimed' ? 'default' : claim.status === 'contacted' ? 'secondary' : 'destructive'}>{claim.status === 'claimed' ? 'Remis' : claim.status === 'contacted' ? 'Contacté' : 'À contacter'}</Badge></TableCell>
-                  <TableCell><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => contactClaim(claim)} disabled={!claim.phone}>Contacter</Button>{claim.status !== 'claimed' && <Button size="sm" onClick={() => updateClaim(claim.id, 'claimed')}>Marquer remis</Button>}</div></TableCell>
+                  <TableCell><div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => contactClaim(claim)} disabled={!claim.phone}>Contacter</Button>{claim.status !== 'claimed' && <Button size="sm" onClick={() => updateClaim(claim.id, 'claimed')}>Marquer remis</Button>}</div></TableCell>
                 </TableRow>
               ))}
             </TableBody>

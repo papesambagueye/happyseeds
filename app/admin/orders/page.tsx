@@ -84,7 +84,7 @@ export default function AdminOrders() {
 
   return (
     <AdminShell>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Commandes</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -140,11 +140,11 @@ export default function AdminOrders() {
                 <div>{detail.order.customerPhone}</div>
               </div>
 
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 {detail.items.map((it) => (
-                  <div key={it.id} className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm">
-                    <span className="line-clamp-1">{it.productName ?? 'Produit'}</span>
-                    <span className="font-medium">{it.quantity} × {formatPrice(it.price, it.currency)}</span>
+                  <div key={it.id} className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border px-3 py-2 text-sm">
+                    <span className="min-w-0 break-words">{it.productName ?? 'Produit'}</span>
+                    <span className="shrink-0 font-medium">{it.quantity} × {formatPrice(it.price, it.currency)}</span>
                   </div>
                 ))}
                 <div className="flex justify-between gap-2 border-t pt-2 font-semibold">
@@ -168,6 +168,7 @@ export default function AdminOrders() {
                       key={status}
                       variant={status === 'cancelled' ? 'destructive' : status === detail.order!.status ? 'default' : 'outline'}
                       disabled={status === detail.order!.status}
+                      className="max-w-full"
                       onClick={() => act(detail.order!.id, status)}
                     >
                       {status === 'validated' && <Check className="mr-1 h-4 w-4" />}

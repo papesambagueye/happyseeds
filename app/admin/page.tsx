@@ -53,7 +53,7 @@ export default function AdminDashboard() {
 
   return (
     <AdminShell>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Tableau de bord</h1>
         <div className="flex gap-1 rounded-lg border bg-muted/40 p-1">
           {RANGES.map((r) => (
@@ -122,13 +122,13 @@ export default function AdminDashboard() {
         <Card className="p-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-semibold">Produits populaires</h2>
-            <div className="relative">
+            <div className="relative min-w-0 max-w-full">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <input
                 value={popular}
                 onChange={(e) => setPopular(e.target.value)}
                 placeholder="Filtrer…"
-                className="h-8 w-36 rounded-md border border-input pl-8 pr-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="h-8 w-full max-w-36 rounded-md border border-input pl-8 pr-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
             </div>
           </div>
