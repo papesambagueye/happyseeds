@@ -14,7 +14,7 @@ import { AppError } from '@/lib/errors'
 export const POINTS_REWARD_TARGET = 30
 export const REFERRAL_BONUS_POINTS = 10
 export const POINTS_PER_1000_FCFA = 1
-export const SIGNUP_BONUS_POINTS = 5
+export const SIGNUP_BONUS_POINTS = 0
 export const FIRST_ORDER_BONUS_POINTS = 5
 export const BIRTHDAY_BONUS_POINTS = 10
 export const FIRST_ORDER_MINIMUM = 300000
@@ -57,14 +57,8 @@ export async function recordLoyaltyEvent(input: {
 }
 
 export async function awardSignupBonus(userId: string) {
-  const existing = await db.select({ id: loyaltyEvents.id }).from(loyaltyEvents).where(and(
-    eq(loyaltyEvents.userId, userId),
-    eq(loyaltyEvents.label, 'Bonus inscription'),
-  )).limit(1)
-  if (existing.length > 0) return false
-  const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
-  await recordLoyaltyEvent({ userId, type: 'points', points: SIGNUP_BONUS_POINTS, label: 'Bonus inscription', expiresAt })
-  return true
+  void userId
+  return false
 }
 
 export async function awardFirstOrderBonusOnValidation(orderId: string) {

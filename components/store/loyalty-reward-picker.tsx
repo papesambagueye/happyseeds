@@ -34,7 +34,7 @@ export function LoyaltyRewardPicker({ points, products }: { points: number; prod
       return
     }
     setReward(res.data)
-    toast.success('Récompense obtenue !')
+    toast.success('Échange confirmé. Nous vous contacterons dans les plus brefs délais concernant votre cadeau fidélité.')
   }
 
   return (

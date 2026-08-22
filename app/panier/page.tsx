@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { StoreShell } from '@/components/store/shell'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/lib/stores/cart'
@@ -10,6 +11,7 @@ import { apiClient } from '@/lib/request'
 import { formatPrice } from '@/lib/utils'
 
 export default function CartPage() {
+  const router = useRouter()
   const items = useCart((state) => state.items)
   const remove = useCart((state) => state.remove)
   const setQuantity = useCart((state) => state.setQuantity)
@@ -38,6 +40,10 @@ export default function CartPage() {
 
     if (!res.success) {
       whatsappWindow?.close()
+      if (res.status === 401) {
+        router.push('/login?next=/panier')
+        return
+      }
       setError(res.error)
       return
     }

@@ -16,6 +16,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const { t } = useI18n()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const next = searchParams.get('next')
   const ref = searchParams.get('ref') ?? undefined
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -35,7 +36,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       const data = res.data as { token?: string } | undefined
       if (data?.token) setSessionToken(data.token)
       toast.success(isLogin ? 'Bienvenue !' : 'Compte créé !')
-      router.push(isLogin ? '/' : '/compte')
+      router.push(isLogin ? (next?.startsWith('/') ? next : '/') : '/compte')
       router.refresh()
     } else {
       toast.error(res.error || 'Une erreur est survenue')

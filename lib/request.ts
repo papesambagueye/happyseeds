@@ -64,6 +64,7 @@ export async function parseApiResponse<T>(response: Response): Promise<ApiRespon
       return {
         success: false,
         error: errorMessage(payload, fallback),
+        ...(response.status === 401 ? { status: response.status } : {}),
       }
     }
     return {
@@ -76,6 +77,7 @@ export async function parseApiResponse<T>(response: Response): Promise<ApiRespon
     return {
       success: false,
       error: errorMessage(payload, fallback),
+        ...(response.status === 401 ? { status: response.status } : {}),
     }
   }
 

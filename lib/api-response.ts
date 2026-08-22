@@ -8,6 +8,7 @@ export type ApiFailure = {
   success: false
   data?: never
   error: string
+  status?: number
 }
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure
