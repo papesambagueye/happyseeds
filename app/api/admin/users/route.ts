@@ -27,9 +27,9 @@ export async function GET(request: Request) {
         suspensionUntil: users.suspensionUntil,
         suspensionReason: users.suspensionReason,
         createdAt: users.createdAt,
-        orderCount: sql<number>`coalesce((select count(*) from orders where orders.user_id = ${users.id} or (orders.user_id is null and ${users.name} is not null and lower(trim(orders.customer_name)) = lower(trim(${users.name})))), 0)`,
-        validatedOrderCount: sql<number>`coalesce((select count(*) from orders where orders.status = 'validated' and (orders.user_id = ${users.id} or (orders.user_id is null and ${users.name} is not null and lower(trim(orders.customer_name)) = lower(trim(${users.name}))))), 0)`,
-        orderTotal: sql<number>`coalesce((select sum(orders.total) from orders where orders.status = 'validated' and (orders.user_id = ${users.id} or (orders.user_id is null and ${users.name} is not null and lower(trim(orders.customer_name)) = lower(trim(${users.name}))))), 0)`,
+        orderCount: sql<number>`coalesce((select count(*) from orders where orders.user_id = ${users.id}), 0)`,
+        validatedOrderCount: sql<number>`coalesce((select count(*) from orders where orders.status = 'validated' and orders.user_id = ${users.id}), 0)`,
+        orderTotal: sql<number>`coalesce((select sum(orders.total) from orders where orders.status = 'validated' and orders.user_id = ${users.id}), 0)`,
       })
       .from(users)
 
