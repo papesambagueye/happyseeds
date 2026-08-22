@@ -27,6 +27,8 @@ export type OrderInput = {
   customerPhone: string
   items: CartLine[]
   voucherCode?: string | null
+  deliveryRequested?: boolean
+  deliveryAddress?: string
 }
 
 const WHATSAPP_DEFAULT = '221787301886' // TECH 221 — override via store_config
@@ -64,6 +66,8 @@ export function buildOrderMessage(
   total: number,
   currency: string,
   deliveryFee = 0,
+  deliveryRequested = false,
+  deliveryAddress = '',
 ): string {
   const lines = [
     `🛒 *NOUVELLE COMMANDE* #${orderNumber}`,
@@ -77,6 +81,8 @@ export function buildOrderMessage(
     )
   }
   lines.push('──────────────────')
+  lines.push(`Mode : ${deliveryRequested ? 'Livraison' : 'Retrait sur place'}`)
+  if (deliveryRequested && deliveryAddress) lines.push(`Adresse : ${deliveryAddress}`)
   lines.push(`Livraison : ${deliveryFee === 0 ? 'Offerte' : formatPrice(deliveryFee, currency)}`)
   lines.push(`*TOTAL : ${formatPrice(total, currency)}*`)
   return lines.join('\n')
@@ -91,8 +97,11 @@ export function buildWhatsappUrl(
 }
 
 export async function createOrder(input: OrderInput) {
-  const { items, customerName, customerPhone, voucherCode } = input
+  const { items, customerName, customerPhone, voucherCode, deliveryRequested = false, deliveryAddress = '' } = input
   if (!items.length) throw new AppError('Le panier est vide', 400)
+  if (deliveryRequested && !deliveryAddress.trim()) {
+    throw new AppError('Veuillez renseigner l’adresse de livraison.', 400)
+  }
 
   // Verify stock and compute the order with a fresh product snapshot.
   const productIds = items.map((i) => i.productId)
@@ -168,7 +177,7 @@ export async function createOrder(input: OrderInput) {
     discount += d
   }
 
-  const deliveryFee = getDeliveryFee(subtotal)
+  const deliveryFee = deliveryRequested ? getDeliveryFee(subtotal) : 0
   const total = Math.max(0, subtotal - discount) + deliveryFee
   const currency = priceMap.values().next().value?.currency ?? 'FCFA'
   const orderNumber = `CMD-${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 90 + 10)}`
@@ -180,7 +189,7 @@ export async function createOrder(input: OrderInput) {
       userId: input.userId ?? null,
       customerName,
       customerPhone,
-      itemSummary: buildOrderMessage(orderNumber, customerName, items, total, currency, deliveryFee),
+      itemSummary: buildOrderMessage(orderNumber, customerName, items, total, currency, deliveryFee, deliveryRequested, deliveryAddress.trim()),
       total,
       discount,
       voucherCode: voucher?.code ?? null,
@@ -220,7 +229,7 @@ export async function createOrder(input: OrderInput) {
       .where(eq(products.id, row.productId))
   }
 
-  const message = buildOrderMessage(orderNumber, customerName, items, total, currency, deliveryFee)
+  const message = buildOrderMessage(orderNumber, customerName, items, total, currency, deliveryFee, deliveryRequested, deliveryAddress.trim())
   const whatsappNumber = await getWhatsappNumber()
   const whatsappUrl = buildWhatsappUrl(whatsappNumber, message)
 

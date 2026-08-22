@@ -24,6 +24,8 @@ export async function POST(request: Request) {
       customerPhone?: string
       items?: Parameters<typeof createOrder>[0]['items']
       voucherCode?: string | null
+      deliveryRequested?: boolean
+      deliveryAddress?: string
     }
 
     const customerName = body.customerName?.trim()
@@ -43,6 +45,8 @@ export async function POST(request: Request) {
       customerPhone,
       items: body.items,
       voucherCode: body.voucherCode,
+      deliveryRequested: body.deliveryRequested,
+      deliveryAddress: body.deliveryAddress,
     })
 
     return NextResponse.json({

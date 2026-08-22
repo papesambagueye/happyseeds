@@ -18,11 +18,13 @@ export default function CartPage() {
   const setQuantity = useCart((state) => state.setQuantity)
   const clear = useCart((state) => state.clear)
   const subtotal = useCart((state) => state.total())
-  const deliveryFee = getDeliveryFee(subtotal)
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
+  const [deliveryRequested, setDeliveryRequested] = useState(false)
+  const [deliveryAddress, setDeliveryAddress] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const deliveryFee = deliveryRequested ? getDeliveryFee(subtotal) : 0
 
   const placeWhatsAppOrder = async () => {
     if (!customerName.trim() || !customerPhone.trim()) {
@@ -37,6 +39,8 @@ export default function CartPage() {
       customerName,
       customerPhone,
       items,
+      deliveryRequested,
+      deliveryAddress,
     })
     setSubmitting(false)
 
@@ -129,6 +133,25 @@ export default function CartPage() {
                   type="tel"
                   className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                 />
+                <label className="flex cursor-pointer items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={deliveryRequested}
+                    onChange={(event) => setDeliveryRequested(event.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-[#007BFF]"
+                  />
+                  <span>Se faire livrer</span>
+                </label>
+                {deliveryRequested && (
+                  <input
+                    value={deliveryAddress}
+                    onChange={(event) => setDeliveryAddress(event.target.value)}
+                    placeholder="Adresse de livraison"
+                    required
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  />
+                )}
+                {!deliveryRequested && <p className="text-xs text-muted-foreground">Retrait sur place, sans frais de livraison.</p>}
                 {error && <p className="text-sm text-destructive">{error}</p>}
                 <Button className="w-full" onClick={placeWhatsAppOrder} disabled={submitting}>
                   {submitting ? 'Enregistrement…' : 'Commander sur WhatsApp'}
