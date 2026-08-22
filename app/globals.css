@@ -24,7 +24,7 @@ body {
   min-height: 100vh;
   background: #ffffff;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Avenir Next", "Century Gothic", "Segoe UI", sans-serif;
   line-height: 1.5;
 }
 

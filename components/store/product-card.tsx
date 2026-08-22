@@ -105,7 +105,7 @@ export function ProductCard({ product }: { product: StoreProduct }) {
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex min-w-0 flex-1 flex-col p-4">
         <Link href={`/produit/${product.slug}`}>
           <h3 className="line-clamp-2 break-words leading-snug font-semibold text-black">{localName}</h3>
         </Link>
@@ -117,11 +117,11 @@ export function ProductCard({ product }: { product: StoreProduct }) {
             </span>
           )}
         </div>
-        <div className="mt-auto flex items-center gap-2 pt-2">
+        <div className="mt-auto flex min-w-0 items-center gap-2 pt-2">
           <Button
             size="sm"
             disabled={out}
-            className="flex-1"
+            className="min-w-0 flex-1 whitespace-normal px-2 text-xs leading-tight sm:text-sm"
             onClick={() => {
               if (out) return
               add({
@@ -136,8 +136,8 @@ export function ProductCard({ product }: { product: StoreProduct }) {
               toast.success(locale === 'fr' ? 'Ajouté au panier' : 'Added to cart')
             }}
           >
-            <ShoppingCart className="mr-1 h-4 w-4" />
-            {t('add_to_cart')}
+            <ShoppingCart className="mr-1 h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+            <span className="text-center">{t('add_to_cart')}</span>
           </Button>
           <button
             type="button"
