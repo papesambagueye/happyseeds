@@ -43,16 +43,17 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   }
 
   return (
-    <div className="mx-auto mt-10 w-full max-w-md rounded-2xl border bg-card p-6 sm:p-8">
-      <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground">
-        <Store className="h-6 w-6" />
-      </div>
-      <h1 className="mt-4 text-center text-2xl font-bold">{isLogin ? t('login_title') : t('register_title')}</h1>
-      <p className="mt-1 text-center text-sm text-muted-foreground">
-        {isLogin ? t('login_sub') : t('register_sub')}
-      </p>
+    <div className="auth-scene relative isolate overflow-hidden rounded-3xl px-3 py-10 sm:px-8 sm:py-14">
+      <div className="relative z-10 mx-auto w-full max-w-md rounded-2xl border bg-card p-6 shadow-2xl sm:p-8">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground">
+          <Store className="h-6 w-6" />
+        </div>
+        <h1 className="mt-4 text-center text-2xl font-bold">{isLogin ? t('login_title') : t('register_title')}</h1>
+        <p className="mt-1 text-center text-sm text-muted-foreground">
+          {isLogin ? t('login_sub') : t('register_sub')}
+        </p>
 
-      <form onSubmit={submit} className="mt-6 space-y-4">
+        <form onSubmit={submit} className="mt-6 space-y-4">
         {!isLogin && ref && (
           <div className="flex items-center gap-2 rounded-lg bg-primary/5 p-2.5 text-sm text-primary">
             🎁 Code parrainage appliqué : <span className="font-semibold">{ref.toUpperCase()}</span>
@@ -90,12 +91,13 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? '…' : isLogin ? t('login_submit') : t('register_submit')}
         </Button>
-      </form>
+        </form>
 
-      <div className="mt-5 text-center text-sm">
-        <Link href={isLogin ? '/register' : '/login'} className="font-medium text-primary hover:underline">
-          {isLogin ? t('login_switch') : t('register_switch')}
-        </Link>
+        <div className="mt-5 text-center text-sm">
+          <Link href={isLogin ? '/register' : '/login'} className="font-medium text-primary hover:underline">
+            {isLogin ? t('login_switch') : t('register_switch')}
+          </Link>
+        </div>
       </div>
     </div>
   )
