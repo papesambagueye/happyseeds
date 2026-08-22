@@ -124,6 +124,41 @@ a:focus-visible {
   }
 }
 
+.auth-layout {
+  background: #07111f;
+}
+
+.auth-layout > header {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  background: rgba(7, 17, 31, 0.96) !important;
+  color: #ffffff;
+}
+
+.auth-layout > main {
+  position: relative;
+  overflow: hidden;
+  background: #07111f;
+}
+
+.auth-layout > main::before {
+  position: absolute;
+  inset: -24%;
+  content: '';
+  background:
+    radial-gradient(circle at 8% 18%, rgba(0, 123, 255, 0.72), transparent 21%),
+    radial-gradient(circle at 92% 20%, rgba(227, 6, 19, 0.68), transparent 20%),
+    radial-gradient(circle at 80% 88%, rgba(255, 184, 0, 0.62), transparent 22%),
+    radial-gradient(circle at 18% 86%, rgba(0, 190, 170, 0.66), transparent 21%);
+  filter: blur(34px) saturate(1.25);
+  animation: authLights 16s ease-in-out infinite reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-layout > main::before {
+    animation: none;
+  }
+}
+
 .glass-panel {
   background: #ffffff;
   border: 1px solid #d9d9d9;
