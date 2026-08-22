@@ -33,6 +33,7 @@ body {
   background: #ffffff;
   color: var(--foreground);
   font-family: 'Rubik', "Avenir Next", "Century Gothic", "Segoe UI", sans-serif;
+  font-weight: 450;
   line-height: 1.5;
 }
 
