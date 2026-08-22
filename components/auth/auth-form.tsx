@@ -44,7 +44,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
 
   return (
     <div className="auth-scene relative isolate overflow-hidden rounded-3xl px-3 py-10 sm:px-8 sm:py-14">
-      <div className="relative z-10 mx-auto w-full max-w-md rounded-2xl border border-black/15 bg-white p-6 text-black shadow-2xl sm:p-8">
+      <div className="auth-panel relative z-10 mx-auto w-full max-w-md rounded-2xl border border-black/15 bg-white p-6 text-black shadow-2xl sm:p-8">
         <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground">
           <Store className="h-6 w-6" />
         </div>

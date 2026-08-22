@@ -82,6 +82,11 @@ a:focus-visible {
   background: #07111f;
 }
 
+.auth-panel {
+  background-color: #ffffff !important;
+  opacity: 1;
+}
+
 .auth-scene::before {
   position: absolute;
   inset: -28%;
