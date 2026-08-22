@@ -3,6 +3,7 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { orderItems, orders, products, storeConfig, voucherRedemptions } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
+import { getDeliveryFee } from '@/lib/delivery'
 import {
   getFlashSalePriceMap,
   getLoyaltyDiscount,
@@ -61,7 +62,8 @@ export function buildOrderMessage(
   customerName: string,
   items: CartLine[],
   total: number,
-  currency: string
+  currency: string,
+  deliveryFee = 0,
 ): string {
   const lines = [
     `🛒 *NOUVELLE COMMANDE* #${orderNumber}`,
@@ -75,6 +77,7 @@ export function buildOrderMessage(
     )
   }
   lines.push('──────────────────')
+  lines.push(`Livraison : ${deliveryFee === 0 ? 'Offerte' : formatPrice(deliveryFee, currency)}`)
   lines.push(`*TOTAL : ${formatPrice(total, currency)}*`)
   return lines.join('\n')
 }
@@ -165,7 +168,8 @@ export async function createOrder(input: OrderInput) {
     discount += d
   }
 
-  const total = Math.max(0, subtotal - discount)
+  const deliveryFee = getDeliveryFee(subtotal)
+  const total = Math.max(0, subtotal - discount) + deliveryFee
   const currency = priceMap.values().next().value?.currency ?? 'FCFA'
   const orderNumber = `CMD-${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 90 + 10)}`
 
@@ -176,7 +180,7 @@ export async function createOrder(input: OrderInput) {
       userId: input.userId ?? null,
       customerName,
       customerPhone,
-      itemSummary: buildOrderMessage(orderNumber, customerName, items, total, currency),
+      itemSummary: buildOrderMessage(orderNumber, customerName, items, total, currency, deliveryFee),
       total,
       discount,
       voucherCode: voucher?.code ?? null,
@@ -216,11 +220,11 @@ export async function createOrder(input: OrderInput) {
       .where(eq(products.id, row.productId))
   }
 
-  const message = buildOrderMessage(orderNumber, customerName, items, total, currency)
+  const message = buildOrderMessage(orderNumber, customerName, items, total, currency, deliveryFee)
   const whatsappNumber = await getWhatsappNumber()
   const whatsappUrl = buildWhatsappUrl(whatsappNumber, message)
 
-  return { order, whatsappUrl, message, discount, loyaltyUsed }
+  return { order, whatsappUrl, message, discount, deliveryFee, loyaltyUsed }
 }
 
 export async function listUserOrders(userId: string) {

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { useCart } from '@/lib/stores/cart'
 import { apiClient } from '@/lib/request'
 import { formatPrice } from '@/lib/utils'
+import { DELIVERY_FEE, FREE_DELIVERY_THRESHOLD, getDeliveryFee } from '@/lib/delivery'
 
 export default function CartPage() {
   const router = useRouter()
@@ -17,6 +18,7 @@ export default function CartPage() {
   const setQuantity = useCart((state) => state.setQuantity)
   const clear = useCart((state) => state.clear)
   const subtotal = useCart((state) => state.total())
+  const deliveryFee = getDeliveryFee(subtotal)
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -106,12 +108,13 @@ export default function CartPage() {
               </div>
               <div className="mt-2 flex items-center justify-between text-sm text-muted-foreground">
                 <span>Livraison</span>
-                <span>Offerte</span>
+                <span>{deliveryFee === 0 ? 'Offerte' : formatPrice(DELIVERY_FEE, 'FCFA')}</span>
               </div>
               <div className="mt-4 border-t pt-4 flex items-center justify-between text-lg font-bold">
                 <span>Total</span>
-                <span>{formatPrice(subtotal, 'FCFA')}</span>
+                <span>{formatPrice(subtotal + deliveryFee, 'FCFA')}</span>
               </div>
+              <p className="mt-2 text-xs text-muted-foreground">Livraison offerte au-delà de {formatPrice(FREE_DELIVERY_THRESHOLD, 'FCFA')}.</p>
               <div className="mt-6 space-y-3">
                 <input
                   value={customerName}
