@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       const balanceRows = await tx
         .select({ total: sql<number>`coalesce(sum(${loyaltyEvents.points}), 0)` })
         .from(loyaltyEvents)
-        .where(and(eq(loyaltyEvents.userId, user.id), sql`${loyaltyEvents.expiresAt} IS NULL OR ${loyaltyEvents.expiresAt} > now()`))
+        .where(and(eq(loyaltyEvents.userId, user.id), sql`(${loyaltyEvents.expiresAt} IS NULL OR ${loyaltyEvents.expiresAt} > now())`))
       const balance = Number(balanceRows[0]?.total ?? 0)
       const tier = getRewardTier(product.price)
       if (!tier) throw new AppError('Ce produit dépasse le plafond des récompenses.', 400)

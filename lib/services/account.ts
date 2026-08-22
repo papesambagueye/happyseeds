@@ -36,7 +36,7 @@ export async function getAccountSummary(userId: string) {
     db
       .select()
       .from(loyaltyEvents)
-      .where(and(eq(loyaltyEvents.userId, userId), sql`${loyaltyEvents.expiresAt} IS NULL OR ${loyaltyEvents.expiresAt} > now()`))
+      .where(and(eq(loyaltyEvents.userId, userId), sql`(${loyaltyEvents.expiresAt} IS NULL OR ${loyaltyEvents.expiresAt} > now())`))
       .orderBy(desc(loyaltyEvents.createdAt))
       .limit(20),
     db
@@ -61,7 +61,7 @@ export async function getAccountSummary(userId: string) {
     db
       .select({ total: sql<number>`coalesce(sum(${loyaltyEvents.points}), 0)` })
       .from(loyaltyEvents)
-      .where(and(eq(loyaltyEvents.userId, userId), sql`${loyaltyEvents.expiresAt} IS NULL OR ${loyaltyEvents.expiresAt} > now()`)),
+      .where(and(eq(loyaltyEvents.userId, userId), sql`(${loyaltyEvents.expiresAt} IS NULL OR ${loyaltyEvents.expiresAt} > now())`)),
   ])
 
   const loyalty = {
