@@ -15,6 +15,7 @@ export const POINTS_REWARD_TARGET = 30
 export const POINTS_PER_1000_FCFA = 1
 export const SIGNUP_BONUS_POINTS = 5
 export const FIRST_ORDER_BONUS_POINTS = 5
+export const THIRD_ORDER_BONUS_POINTS = 5
 export const BIRTHDAY_BONUS_POINTS = 5
 export const FIRST_ORDER_MINIMUM = 800000
 
@@ -80,6 +81,30 @@ export async function awardFirstOrderBonusOnValidation(orderId: string) {
   if (existing.length > 0) return 0
   await recordLoyaltyEvent({ userId: order.userId, type: 'first_orders', points: FIRST_ORDER_BONUS_POINTS, label: 'Bonus première commande', orderId })
   return FIRST_ORDER_BONUS_POINTS
+}
+
+export async function awardThirdOrderBonusOnValidation(orderId: string) {
+  const rows = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1)
+  const order = rows[0]
+  if (!order?.userId || order.status !== 'validated') return 0
+
+  const validated = await countValidatedOrders(order.userId)
+  if (validated !== 3) return 0
+
+  const existing = await db.select({ id: loyaltyEvents.id }).from(loyaltyEvents).where(and(
+    eq(loyaltyEvents.userId, order.userId),
+    eq(loyaltyEvents.label, 'Bonus troisième commande'),
+  )).limit(1)
+  if (existing.length > 0) return 0
+
+  await recordLoyaltyEvent({
+    userId: order.userId,
+    type: 'first_orders',
+    points: THIRD_ORDER_BONUS_POINTS,
+    label: 'Bonus troisième commande',
+    orderId,
+  })
+  return THIRD_ORDER_BONUS_POINTS
 }
 
 export async function awardBirthdayBonus(userId: string) {

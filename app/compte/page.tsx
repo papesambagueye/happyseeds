@@ -51,7 +51,7 @@ export default async function AccountPage() {
             <h2 className="text-lg font-semibold">Comment gagner des points</h2>
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
               <li><strong className="text-foreground">1 point</strong> par tranche de 1 000 FCFA sur une commande validée.</li>
-              <li><strong className="text-foreground">5 points</strong> à l’inscription, puis 5 points à la première commande d’au moins 10 000 FCFA.</li>
+              <li><strong className="text-foreground">5 points</strong> à l’inscription, puis 5 points à la première commande d’au moins 10 000 FCFA et après 3 commandes validées.</li>
               <li><strong className="text-foreground">30 / 50 / 100 points</strong> donnent respectivement un produit jusqu’à 5 000 / 10 000 / 15 000 FCFA.</li>
               <li><strong className="text-foreground">5 points</strong> lorsque les commandes validées de vos filleuls atteignent 6 000 FCFA cumulés, une seule fois, et 5 points le jour de votre anniversaire.</li>
             </ul>

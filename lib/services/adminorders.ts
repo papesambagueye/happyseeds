@@ -4,7 +4,7 @@ import { db } from '@/db'
 import { orderItems, orders, products, storeConfig } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
 import { awardReferralBonusOnValidation, awardReferralPointsForOrder } from './referrals'
-import { awardFirstOrderBonusOnValidation, awardPurchasePointsOnValidation } from './rewards'
+import { awardFirstOrderBonusOnValidation, awardPurchasePointsOnValidation, awardThirdOrderBonusOnValidation } from './rewards'
 
 export async function listAdminOrders(status?: string, q?: string) {
   const term = q?.trim()
@@ -84,6 +84,7 @@ export async function validateOrder(orderId: string) {
     await awardReferralPointsForOrder(orderId)
     await awardPurchasePointsOnValidation(orderId)
     await awardFirstOrderBonusOnValidation(orderId)
+    await awardThirdOrderBonusOnValidation(orderId)
   } catch (err) {
     console.error('Referral bonus failed for order', orderId, err)
   }
@@ -136,6 +137,7 @@ export async function updateOrderStatus(orderId: string, nextStatus: 'pending' |
       await awardReferralPointsForOrder(orderId)
       await awardPurchasePointsOnValidation(orderId)
       await awardFirstOrderBonusOnValidation(orderId)
+      await awardThirdOrderBonusOnValidation(orderId)
     } catch (error) {
       console.error('Referral bonus failed for order', orderId, error)
     }
