@@ -27,7 +27,20 @@ export default function AdminUsers() {
     setLoading(false)
   }, [query])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    load()
+    const refresh = () => {
+      if (document.visibilityState === 'visible') load()
+    }
+    const interval = window.setInterval(refresh, 15000)
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    }
+  }, [load])
 
   const changeRole = async (id: string, role: string) => {
     const res = await apiClient.patch(`/api/admin/users?id=${id}`, { role })
