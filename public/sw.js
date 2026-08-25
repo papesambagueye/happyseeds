@@ -1,5 +1,5 @@
 /* TECH 221 — lightweight app-shell service worker (PWA). */
-const CACHE = 'tech221-v2'
+const CACHE = 'tech221-v3'
 const APP_SHELL = ['/', '/manifest.webmanifest', '/diamant.png']
 
 self.addEventListener('install', (event) => {
@@ -18,6 +18,9 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event
   if (request.method !== 'GET') return
+
+  // Authentication and other API responses must always reach the server.
+  if (new URL(request.url).pathname.startsWith('/api/')) return
 
   if (request.mode === 'navigate') {
     event.respondWith(
