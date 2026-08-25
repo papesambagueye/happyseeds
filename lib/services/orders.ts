@@ -3,7 +3,8 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { orderItems, orders, products, storeConfig, users, voucherRedemptions, vouchers } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
-import { getFlashSalePriceMap, getPromotionPriceMap, LOYALTY_MINIMUM_SUBTOTAL, validateVoucher } from './rewards'
+import { LOYALTY_FREE_ORDERS, LOYALTY_MINIMUM_SUBTOTAL, LOYALTY_DISCOUNT_PERCENT } from '@/lib/services/rewards'
+import { getFlashSalePriceMap, getPromotionPriceMap, validateVoucher } from './rewards'
 
 export type CartLine = {
   productId: string
@@ -140,13 +141,17 @@ export async function createOrder(input: OrderInput) {
             .where(and(eq(orders.userId, input.userId!), eq(orders.status, 'validated')))
         })()
       : []
-    const loyaltyQualified = Boolean(input.userId && subtotal >= LOYALTY_MINIMUM_SUBTOTAL && Number(validatedRows[0]?.n ?? 0) < 5)
-    const loyaltyDiscount = loyaltyQualified ? Math.round(subtotal * 10 / 100) : 0
+    const validatedOrderCount = Number(validatedRows[0]?.n ?? 0)
+    const loyaltyQualified = Boolean(
+      input.userId &&
+      (validatedOrderCount < LOYALTY_FREE_ORDERS || subtotal >= LOYALTY_MINIMUM_SUBTOTAL),
+    )
+    const loyaltyDiscount = loyaltyQualified ? Math.round(subtotal * LOYALTY_DISCOUNT_PERCENT / 100) : 0
     let discount = loyaltyDiscount
     let voucher: { id: string; code: string; title: string | null } | null = null
     let voucherDiscount = 0
     if (voucherCode && input.userId) {
-      const { voucher: v, discount: d } = await validateVoucher(voucherCode, subtotal - loyaltyDiscount, tx)
+      const { voucher: v, discount: d } = await validateVoucher(voucherCode, subtotal - loyaltyDiscount)
       const alreadyUsed = await tx.select({ id: voucherRedemptions.id }).from(voucherRedemptions).where(and(eq(voucherRedemptions.userId, input.userId), eq(voucherRedemptions.voucherId, v.id))).limit(1)
       if (alreadyUsed.length > 0) throw new AppError('Vous avez déjà utilisé ce code promo', 400)
       voucher = { id: v.id, code: v.code, title: v.title }

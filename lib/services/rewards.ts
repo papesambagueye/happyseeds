@@ -20,10 +20,11 @@ export const FIRST_ORDER_BONUS_POINTS = 3
 export const BIRTHDAY_BONUS_POINTS = 3
 export const FIRST_ORDER_MINIMUM = 6500
 
-// Loyalty: first 5 orders of a customer get 10% off automatically.
-export const LOYALTY_FREE_ORDERS = 5
-export const LOYALTY_DISCOUNT_PERCENT = 10
-export const LOYALTY_MINIMUM_SUBTOTAL = 15000
+// Loyalty: the first three validated orders qualify automatically. Later orders
+// qualify only when their subtotal reaches the minimum threshold.
+export const LOYALTY_FREE_ORDERS = 3
+export const LOYALTY_DISCOUNT_PERCENT = 0
+export const LOYALTY_MINIMUM_SUBTOTAL = 20_000
 
 /** Number of validated orders a user already has. */
 export async function countValidatedOrders(userId: string): Promise<number> {
@@ -38,13 +39,10 @@ export async function countValidatedOrders(userId: string): Promise<number> {
  * Loyalty discount for the NEXT order: the user earns a 10% discount while their
  * validated order count is below LOYALTY_FREE_ORDERS.
  */
-export async function getLoyaltyDiscount(userId: string | null | undefined, subtotal?: number) {
+export async function getLoyaltyDiscount(userId: string | null | undefined, subtotal = 0) {
   if (!userId) return { qualified: false, percent: 0 }
-  if (subtotal !== undefined && subtotal < LOYALTY_MINIMUM_SUBTOTAL) {
-    return { qualified: false, percent: 0 }
-  }
   const validated = await countValidatedOrders(userId)
-  if (validated >= LOYALTY_FREE_ORDERS) {
+  if (validated >= LOYALTY_FREE_ORDERS && subtotal < LOYALTY_MINIMUM_SUBTOTAL) {
     return { qualified: false, percent: 0 }
   }
   return { qualified: true, percent: LOYALTY_DISCOUNT_PERCENT }
@@ -187,11 +185,11 @@ export async function userUsedVoucher(
  * Validate a voucher code and compute the discount amount for a subtotal.
  * Throws AppError with a friendly French message when not usable.
  */
-export async function validateVoucher(code: string, subtotal: number, executor: any = db) {
+export async function validateVoucher(code: string, subtotal: number) {
   const trimmed = (code || '').trim().toUpperCase()
   if (!trimmed) throw new AppError('Veuillez saisir un code', 400)
 
-  const rows = await executor
+  const rows = await db
     .select()
     .from(vouchers)
     .where(eq(vouchers.code, trimmed))
