@@ -23,6 +23,7 @@ export const FIRST_ORDER_MINIMUM = 6500
 // Loyalty: first 5 orders of a customer get 10% off automatically.
 export const LOYALTY_FREE_ORDERS = 5
 export const LOYALTY_DISCOUNT_PERCENT = 10
+export const LOYALTY_MINIMUM_SUBTOTAL = 15000
 
 /** Number of validated orders a user already has. */
 export async function countValidatedOrders(userId: string): Promise<number> {
@@ -37,8 +38,11 @@ export async function countValidatedOrders(userId: string): Promise<number> {
  * Loyalty discount for the NEXT order: the user earns a 10% discount while their
  * validated order count is below LOYALTY_FREE_ORDERS.
  */
-export async function getLoyaltyDiscount(userId: string | null | undefined) {
+export async function getLoyaltyDiscount(userId: string | null | undefined, subtotal?: number) {
   if (!userId) return { qualified: false, percent: 0 }
+  if (subtotal !== undefined && subtotal < LOYALTY_MINIMUM_SUBTOTAL) {
+    return { qualified: false, percent: 0 }
+  }
   const validated = await countValidatedOrders(userId)
   if (validated >= LOYALTY_FREE_ORDERS) {
     return { qualified: false, percent: 0 }

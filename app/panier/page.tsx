@@ -26,10 +26,10 @@ export default function CartPage() {
   const [loyaltyPercent, setLoyaltyPercent] = useState(0)
 
   useEffect(() => {
-    apiClient.get<{ qualified: boolean; percent: number }>('/api/rewards/loyalty').then((res) => {
+    apiClient.get<{ qualified: boolean; percent: number }>(`/api/rewards/loyalty?subtotal=${subtotal}`).then((res) => {
       if (res.success) setLoyaltyPercent(res.data.qualified ? res.data.percent : 0)
-    })
-  }, [])
+    }).catch(() => setLoyaltyPercent(0))
+  }, [subtotal])
 
   const loyaltyDiscount = Math.round(subtotal * loyaltyPercent / 100)
   const estimatedTotal = Math.max(0, subtotal - loyaltyDiscount)

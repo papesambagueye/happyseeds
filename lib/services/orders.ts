@@ -3,7 +3,7 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { orderItems, orders, products, storeConfig, users, voucherRedemptions, vouchers } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
-import { getFlashSalePriceMap, getPromotionPriceMap, validateVoucher } from './rewards'
+import { getFlashSalePriceMap, getPromotionPriceMap, LOYALTY_MINIMUM_SUBTOTAL, validateVoucher } from './rewards'
 
 export type CartLine = {
   productId: string
@@ -140,7 +140,7 @@ export async function createOrder(input: OrderInput) {
             .where(and(eq(orders.userId, input.userId!), eq(orders.status, 'validated')))
         })()
       : []
-    const loyaltyQualified = Boolean(input.userId && Number(validatedRows[0]?.n ?? 0) < 5)
+    const loyaltyQualified = Boolean(input.userId && subtotal >= LOYALTY_MINIMUM_SUBTOTAL && Number(validatedRows[0]?.n ?? 0) < 5)
     const loyaltyDiscount = loyaltyQualified ? Math.round(subtotal * 10 / 100) : 0
     let discount = loyaltyDiscount
     let voucher: { id: string; code: string; title: string | null } | null = null
