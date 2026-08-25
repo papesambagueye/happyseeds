@@ -23,8 +23,6 @@ type CartState = {
   count: () => number
 }
 
-import { getSessionToken } from '@/lib/auth/token-store'
-
 export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
@@ -65,88 +63,14 @@ export const useCart = create<CartState>()(
     }),
     {
       name: 'tec221_cart',
-      // Use a storage wrapper that scopes the persisted key to the current
-      // session token so each user has their own cart in localStorage.
-      // Cast to any to satisfy Persist types — runtime behavior is a localStorage
-      // wrapper that prefixes keys with the current session token.
-      storage: (function () {
-        return {
-          getItem: (name: string) => {
-            try {
-              if (typeof window === 'undefined' || !window.localStorage) return null
-              const token = getSessionToken() ?? 'anon'
-              return window.localStorage.getItem(`${name}_${token}`)
-            } catch {
-              return null
-            }
-          },
-          setItem: (name: string, value: string) => {
-            try {
-              if (typeof window === 'undefined' || !window.localStorage) return
-              const token = getSessionToken() ?? 'anon'
-              window.localStorage.setItem(`${name}_${token}`, value)
-            } catch {
-              // ignore
-            }
-          },
-          removeItem: (name: string) => {
-            try {
-              if (typeof window === 'undefined' || !window.localStorage) return
-              const token = getSessionToken() ?? 'anon'
-              window.localStorage.removeItem(`${name}_${token}`)
-            } catch {
-              // ignore
-            }
-          },
-        }
-      })() as any,
     }
   )
 )
 
-// Listen for session token changes and reload the persisted cart for the
-// new token, or clear the cart when signed out. This ensures that switching
-// accounts in the same browser updates the in-memory cart immediately.
+// The cart is intentionally independent from the session token. Session tokens
+// are rotated on login, so scoping the key to a token would lose the cart.
 if (typeof window !== 'undefined') {
-  window.addEventListener('tec221:session', () => {
-    try {
-      const token = getSessionToken() ?? 'anon'
-      const key = `tec221_cart_${token}`
-      const anonymousKey = 'tec221_cart_anon'
-      const raw = window.localStorage.getItem(key)
-      const parsed = raw ? JSON.parse(raw) : null
-      const store = useCart.getState()
-      if (parsed && Array.isArray(parsed.state?.items)) {
-        // Replace items with persisted value for the new token
-        useCart.setState({ items: parsed.state.items })
-      } else if (token !== 'anon') {
-        const anonymousRaw = window.localStorage.getItem(anonymousKey)
-        const anonymousParsed = anonymousRaw ? JSON.parse(anonymousRaw) : null
-        const anonymousItems = anonymousParsed?.state?.items
-        if (Array.isArray(anonymousItems) && anonymousItems.length > 0) {
-          const persisted = JSON.stringify({ state: { items: anonymousItems }, version: 0 })
-          window.localStorage.setItem(key, persisted)
-          window.localStorage.removeItem(anonymousKey)
-          useCart.setState({ items: anonymousItems })
-        } else {
-          store.clear()
-        }
-      } else {
-        // No persisted cart for this token — clear.
-        store.clear()
-      }
-    } catch {
-      // best-effort
-      useCart.getState().clear()
-    }
-  })
-
-  // Also react to cross-tab storage changes (other tab changed session token).
-  window.addEventListener('storage', (e) => {
-    if (!e.key) return
-    // If session key changed in another tab, trigger the same session event.
-    if (e.key === 'tec221_token') {
-      window.dispatchEvent(new CustomEvent('tec221:session', { detail: { token: e.newValue } }))
-    }
+  window.addEventListener('storage', () => {
+    useCart.persist.rehydrate()
   })
 }
