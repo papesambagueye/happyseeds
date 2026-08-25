@@ -7,6 +7,7 @@
 // either the cookie or this header.
 
 const TOKEN_KEY = 'tec221_token'
+const USER_ID_KEY = 'tec221_user_id'
 
 export function getSessionToken(): string | null {
   if (typeof window === 'undefined') return null
@@ -21,7 +22,10 @@ export function setSessionToken(token: string | null): void {
   if (typeof window === 'undefined') return
   try {
     if (token) window.localStorage.setItem(TOKEN_KEY, token)
-    else window.localStorage.removeItem(TOKEN_KEY)
+    else {
+      window.localStorage.removeItem(TOKEN_KEY)
+      window.localStorage.removeItem(USER_ID_KEY)
+    }
 
     try {
       // Notify the current window that the session token changed so in-memory
@@ -34,5 +38,24 @@ export function setSessionToken(token: string | null): void {
     }
   } catch {
     // Storage may be unavailable in restricted contexts; the cookie still works.
+  }
+}
+
+export function getSessionUserId(): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    return window.localStorage.getItem(USER_ID_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function setSessionUserId(userId: string | null): void {
+  if (typeof window === 'undefined') return
+  try {
+    if (userId) window.localStorage.setItem(USER_ID_KEY, userId)
+    else window.localStorage.removeItem(USER_ID_KEY)
+  } catch {
+    // Storage may be unavailable; the cookie still authenticates the session.
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { getSessionUserId } from '@/lib/auth/token-store'
 
 export type CartItem = {
   productId: string
@@ -63,14 +64,53 @@ export const useCart = create<CartState>()(
     }),
     {
       name: 'tec221_cart',
+      storage: {
+        getItem: (name: string): string | null => {
+          try {
+            if (typeof window === 'undefined') return null
+            const userId = getSessionUserId() ?? 'anon'
+            return window.localStorage.getItem(`${name}_${userId}`)
+          } catch {
+            return null
+          }
+        },
+        setItem: (name: string, value: string): void => {
+          try {
+            if (typeof window === 'undefined') return
+            const userId = getSessionUserId() ?? 'anon'
+            window.localStorage.setItem(`${name}_${userId}`, value)
+          } catch {
+            // Ignore unavailable browser storage.
+          }
+        },
+        removeItem: (name: string): void => {
+          try {
+            if (typeof window === 'undefined') return
+            const userId = getSessionUserId() ?? 'anon'
+            window.localStorage.removeItem(`${name}_${userId}`)
+          } catch {
+            // Ignore unavailable browser storage.
+          }
+        },
+      } as any,
     }
   )
 )
 
-// The cart is intentionally independent from the session token. Session tokens
-// are rotated on login, so scoping the key to a token would lose the cart.
 if (typeof window !== 'undefined') {
-  window.addEventListener('storage', () => {
+  window.addEventListener('tec221:session', () => {
+    const userId = getSessionUserId()
+    if (userId) {
+      const accountKey = `tec221_cart_${userId}`
+      const legacyCart = window.localStorage.getItem('tec221_cart')
+      if (!window.localStorage.getItem(accountKey) && legacyCart) {
+        window.localStorage.setItem(accountKey, legacyCart)
+        window.localStorage.removeItem('tec221_cart')
+      }
+    }
     useCart.persist.rehydrate()
+  })
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'tec221_user_id') useCart.persist.rehydrate()
   })
 }

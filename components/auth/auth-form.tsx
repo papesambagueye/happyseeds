@@ -6,7 +6,7 @@ import { Store } from 'lucide-react'
 import { toast } from 'sonner'
 import { useI18n } from '@/lib/i18n'
 import { apiClient } from '@/lib/request'
-import { setSessionToken } from '@/lib/auth/token-store'
+import { setSessionToken, setSessionUserId } from '@/lib/auth/token-store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -33,8 +33,11 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       : await apiClient.post('/api/auth/register', { email, password, name, birthDate: birthDate || undefined, ref: referralCode.trim() || undefined })
     setLoading(false)
     if (res.success) {
-      const data = res.data as { token?: string } | undefined
-      if (data?.token) setSessionToken(data.token)
+      const data = res.data as { token?: string; user?: { id?: string } } | undefined
+      if (data?.token) {
+        setSessionUserId(data.user?.id ?? null)
+        setSessionToken(data.token)
+      }
       toast.success(isLogin ? 'Bienvenue !' : 'Compte créé !')
       router.push(isLogin ? (next?.startsWith('/') ? next : '/') : '/compte')
       router.refresh()
