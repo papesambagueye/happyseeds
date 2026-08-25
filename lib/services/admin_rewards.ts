@@ -1,7 +1,7 @@
 import 'server-only'
 import { desc, eq } from 'drizzle-orm'
 import { db } from '@/db'
-import { flashSales, products, vouchers } from '@/db/schemas/core'
+import { flashSales, products, promotions, vouchers } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
 
 export type VoucherUpsert = {
@@ -19,6 +19,14 @@ export type FlashSaleUpsert = {
   salePrice: number
   active: number
   label?: string | null
+  startsAt?: string | null
+  endsAt?: string | null
+}
+
+export type PromotionUpsert = {
+  productId: string
+  promotionalPrice: number
+  active: number
   startsAt?: string | null
   endsAt?: string | null
 }
@@ -104,8 +112,9 @@ export async function listAdminFlashSales() {
 
 export async function upsertFlashSale(input: FlashSaleUpsert & { id?: string }) {
   if (input.salePrice < 0) throw new AppError('Le prix de vente doit être positif', 400)
-  const productRows = await db.select({ price: products.price }).from(products).where(eq(products.id, input.productId)).limit(1)
+  const productRows = await db.select({ price: products.price, stock: products.stock }).from(products).where(eq(products.id, input.productId)).limit(1)
   if (productRows.length === 0) throw new AppError('Produit introuvable', 404)
+  if (productRows[0].stock !== 1) throw new AppError('Une vente flash doit concerner un article unique avec un stock de 1', 400)
   if (input.salePrice <= 0 || input.salePrice >= productRows[0].price) {
     throw new AppError('Le prix flash doit être inférieur au prix normal et supérieur à zéro', 400)
   }
@@ -140,4 +149,48 @@ export async function upsertFlashSale(input: FlashSaleUpsert & { id?: string }) 
 
 export async function deleteFlashSale(id: string) {
   await db.delete(flashSales).where(eq(flashSales.id, id))
+}
+
+export async function listAdminPromotions() {
+  return db
+    .select({
+      id: promotions.id,
+      productId: promotions.productId,
+      promotionalPrice: promotions.promotionalPrice,
+      active: promotions.active,
+      startsAt: promotions.startsAt,
+      endsAt: promotions.endsAt,
+      createdAt: promotions.createdAt,
+      productName: products.name,
+      productPrice: products.price,
+      productImage: products.image,
+    })
+    .from(promotions)
+    .innerJoin(products, eq(promotions.productId, products.id))
+    .orderBy(desc(promotions.createdAt))
+}
+
+export async function upsertPromotion(input: PromotionUpsert & { id?: string }) {
+  if (!Number.isInteger(input.promotionalPrice) || input.promotionalPrice <= 0) {
+    throw new AppError('Le nouveau prix doit être un montant FCFA positif', 400)
+  }
+  const productRows = await db.select({ price: products.price }).from(products).where(eq(products.id, input.productId)).limit(1)
+  if (productRows.length === 0) throw new AppError('Produit introuvable', 404)
+  if (input.promotionalPrice >= productRows[0].price) {
+    throw new AppError('Le prix promotionnel doit être inférieur au prix actuel', 400)
+  }
+  const values = {
+    productId: input.productId,
+    promotionalPrice: input.promotionalPrice,
+    active: input.active,
+    startsAt: input.startsAt ? new Date(input.startsAt) : null,
+    endsAt: input.endsAt ? new Date(input.endsAt) : null,
+    updatedAt: new Date(),
+  }
+  if (!input.id) return (await db.insert(promotions).values(values).returning())[0]
+  return (await db.update(promotions).set(values).where(eq(promotions.id, input.id)).returning())[0] ?? null
+}
+
+export async function deletePromotion(id: string) {
+  await db.delete(promotions).where(eq(promotions.id, id))
 }

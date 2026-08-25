@@ -5,8 +5,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatPrice(cents: number, currency: string): string {
-  return `${(cents / 100).toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`
+export function formatPrice(amount: number, currency: string): string {
+  return `${amount.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} ${currency}`
 }
 
 export function formatDate(input: string | Date, locale = 'fr'): string {

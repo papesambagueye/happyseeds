@@ -36,6 +36,7 @@ body {
   font-family: 'Rubik', "Avenir Next", "Century Gothic", "Segoe UI", sans-serif;
   font-weight: 450;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 body::before {
@@ -56,6 +57,33 @@ select,
 textarea {
   font: inherit;
   max-width: 100%;
+  min-width: 0;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+label,
+button,
+a {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+  button,
+  [role='button'] {
+    white-space: normal;
+    line-height: 1.25;
+  }
 }
 
 button:not(:disabled),

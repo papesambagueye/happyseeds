@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server'
+import { handleApiError } from '@/lib/api-error-response'
 import { db } from '@/db'
 import { products, wishlistItems } from '@/db/schemas/core'
 import { getCurrentUser } from '@/lib/auth/session'
 import { and, eq } from 'drizzle-orm'
 
 export async function GET(request: Request) {
+ try {
   const user = await getCurrentUser()
   if (!user) {
     return NextResponse.json({ success: true, data: { wishlisted: false } })
@@ -22,9 +24,11 @@ export async function GET(request: Request) {
     .where(and(eq(wishlistItems.userId, user.id), eq(wishlistItems.productId, productId)))
 
   return NextResponse.json({ success: true, data: { wishlisted: items.length > 0 } })
+  } catch (error) { return handleApiError(error) }
 }
 
 export async function POST(request: Request) {
+ try {
   const user = await getCurrentUser()
   if (!user) {
     return NextResponse.json({ success: false, error: 'Connexion requise.' }, { status: 401 })
@@ -48,9 +52,11 @@ export async function POST(request: Request) {
 
   await db.insert(wishlistItems).values({ userId: user.id, productId }).onConflictDoNothing()
   return NextResponse.json({ success: true, data: { wishlisted: true } })
+  } catch (error) { return handleApiError(error) }
 }
 
 export async function DELETE(request: Request) {
+ try {
   const user = await getCurrentUser()
   if (!user) {
     return NextResponse.json({ success: false, error: 'Connexion requise.' }, { status: 401 })
@@ -64,4 +70,5 @@ export async function DELETE(request: Request) {
 
   await db.delete(wishlistItems).where(and(eq(wishlistItems.userId, user.id), eq(wishlistItems.productId, productId)))
   return NextResponse.json({ success: true, data: { wishlisted: false } })
+  } catch (error) { return handleApiError(error) }
 }

@@ -33,7 +33,6 @@ export function Header() {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [siteName, setSiteName] = useState<string | null>(null)
-  const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
   useEffect(() => {
     apiClient.get<Me>('/api/auth/me').then((res) => {
@@ -43,11 +42,10 @@ export function Header() {
   }, [pathname])
 
   useEffect(() => {
-    // Fetch public shop config (site name, logo)
+    // Fetch the public shop name; the brand mark is fixed by the deployed app assets.
     apiClient.get<Record<string, string>>('/api/config').then((res) => {
       if (res.success && res.data) {
         setSiteName(res.data.site_name ?? null)
-        setLogoUrl(res.data.logo_url ?? null)
       }
     })
   }, [])
@@ -77,16 +75,10 @@ export function Header() {
       }}
     >
       <div className="mx-auto flex min-w-0 max-w-7xl items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4">
-        <Link href="/" className="flex min-w-0 shrink items-center gap-2 font-bold text-lg">
-          {logoUrl ? (
-            <div className="relative h-9 w-9 overflow-hidden rounded-xl bg-transparent">
-              <Image src={logoUrl} alt={siteName ?? 'Logo'} fill className="object-cover" unoptimized />
-            </div>
-          ) : (
-            <div className="relative h-9 w-9 overflow-hidden rounded-xl bg-white">
-              <Image src="/logo.png" alt="Logo TECH 221" fill className="scale-[2.8] object-contain" unoptimized />
-            </div>
-          )}
+        <Link href="/" className="flex min-w-0 max-w-[45%] shrink items-center gap-2 font-bold text-lg sm:max-w-none">
+          <div className="relative h-9 w-9 overflow-hidden rounded-xl bg-white">
+            <Image src="/diamant.png" alt="Logo TECH 221" fill className="object-contain" unoptimized />
+          </div>
           <span className="truncate">{siteName ?? 'TECH\u00A0221'}</span>
         </Link>
 
@@ -173,6 +165,7 @@ export function Header() {
           <NavLink href="/" label={t('nav_home')} active={pathname === '/'} />
           <NavLink href="/catalogue" label={t('nav_shop')} active={pathname.startsWith('/catalogue')} />
           <NavLink href="/promos" label={t('nav_promos')} active={pathname.startsWith('/promos')} />
+          <NavLink href="/vente-flash" label="Vente flash" active={pathname.startsWith('/vente-flash')} />
           {me && <NavLink href="/parrainage" label={t('nav_referral')} active={pathname.startsWith('/parrainage')} />}
           {me && <NavLink href="/commandes" label={t('nav_orders')} active={pathname.startsWith('/commandes')} />}
           <NavLink href="/contact" label={t('contact_title')} active={pathname.startsWith('/contact')} />
@@ -188,6 +181,7 @@ export function Header() {
             <MobileLink href="/" label={t('nav_home')} onNavigate={() => setOpen(false)} />
             <MobileLink href="/catalogue" label={t('nav_shop')} onNavigate={() => setOpen(false)} />
             <MobileLink href="/promos" label={t('nav_promos')} onNavigate={() => setOpen(false)} />
+            <MobileLink href="/vente-flash" label="Vente flash" onNavigate={() => setOpen(false)} />
             {me && <MobileLink href="/parrainage" label={t('nav_referral')} onNavigate={() => setOpen(false)} />}
             {me && <MobileLink href="/commandes" label={t('nav_orders')} onNavigate={() => setOpen(false)} />}
             <MobileLink href="/contact" label={t('contact_title')} onNavigate={() => setOpen(false)} />

@@ -8,7 +8,7 @@ import { orderItems, orders } from '@/db/schemas/core'
 import { handleApiError } from '@/lib/api-error-response'
 import { requireStaff } from '@/lib/auth/admin-guard'
 import { AppError } from '@/lib/errors'
-import { updateOrderStatus } from '@/lib/services/adminorders'
+import { deleteOrder, updateOrderStatus } from '@/lib/services/adminorders'
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -51,6 +51,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     await updateOrderStatus(id, body.status as (typeof allowed)[number])
 
+    return NextResponse.json({ success: true, data: null })
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await requireStaff()
+    const { id } = await params
+    await deleteOrder(id)
     return NextResponse.json({ success: true, data: null })
   } catch (error) {
     return handleApiError(error)

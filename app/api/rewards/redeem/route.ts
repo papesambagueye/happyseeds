@@ -8,8 +8,9 @@ import { getCurrentUser } from '@/lib/auth/session'
 import { handleApiError } from '@/lib/api-error-response'
 import { AppError } from '@/lib/errors'
 import { getRewardTier } from '@/lib/reward-tiers'
+import { awardReferralRelaunch } from '@/lib/services/referrals'
 
-const MAX_PRODUCT_PRICE = 1500000
+const MAX_PRODUCT_PRICE = 23000
 
 export async function GET() {
   try {
@@ -65,12 +66,12 @@ export async function POST(request: Request) {
         active: 1,
       }).returning({ id: vouchers.id, code: vouchers.code })
 
-      await tx.insert(loyaltyEvents).values({
+      const redemptionEvent = await tx.insert(loyaltyEvents).values({
         userId: user.id,
         type: 'points',
         points: -tier.points,
         label: `Récompense (${tier.points} points) : ${product.name}`,
-      })
+      }).returning({ id: loyaltyEvents.id })
 
       await tx.insert(rewardClaims).values({
         userId: user.id,
@@ -79,8 +80,10 @@ export async function POST(request: Request) {
         points: tier.points,
       })
 
-      return { productName: product.name, voucherCode: voucherRows[0].code, remainingPoints: balance - tier.points, pointsUsed: tier.points }
+      return { productName: product.name, voucherCode: voucherRows[0].code, redemptionId: redemptionEvent[0].id, remainingPoints: balance - tier.points, pointsUsed: tier.points }
     })
+
+    await awardReferralRelaunch(user.id, result.redemptionId)
 
     return NextResponse.json({ success: true, data: result })
   } catch (error) {

@@ -140,8 +140,8 @@ export default function AdminProducts() {
         {loading ? 'Chargement…' : `${rows.length} produit(s)`}
       </div>
 
-      <div className="mt-2 overflow-hidden rounded-2xl border bg-card">
-        <Table>
+      <div className="mt-2 overflow-x-auto rounded-2xl border bg-card">
+        <Table className="min-w-[720px]">
           <TableHeader>
             <TableRow>
               <TableHead>Produit</TableHead>

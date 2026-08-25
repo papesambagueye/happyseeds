@@ -38,7 +38,7 @@ export function Footer() {
         <div>
           <div className="flex items-center gap-2 font-bold text-lg">
             <span className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-white">
-              <Image src="/logo.png" alt="Logo TECH 221" fill className="scale-[2.8] object-contain" unoptimized />
+              <Image src="/diamant.png" alt="Logo TECH 221" fill className="object-contain" unoptimized />
             </span>
             TECH&nbsp;221
           </div>

@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 
 import { handleApiError } from '@/lib/api-error-response'
 import { requireStaff } from '@/lib/auth/admin-guard'
@@ -49,6 +50,7 @@ export async function POST(request: Request) {
       sortOrder: Number(body.sortOrder ?? 0),
     })
 
+    revalidatePath('/', 'page')
     return NextResponse.json({ success: true, data: slide })
   } catch (error) {
     return handleApiError(error)

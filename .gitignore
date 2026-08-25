@@ -53,3 +53,4 @@ next-env.d.ts
 /remote-control/data/
 !/remote-control/data/.gitkeep
 
+.env*

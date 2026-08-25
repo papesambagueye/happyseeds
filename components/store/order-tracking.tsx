@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { CheckCircle2, Clock } from 'lucide-react'
-import { StoreShell } from '@/components/store/shell'
 import { apiClient } from '@/lib/request'
 import { useI18n } from '@/lib/i18n'
 import { formatDate, formatPrice } from '@/lib/utils'
@@ -16,35 +15,28 @@ type OrderDetail = {
 export function OrderTracking({ id }: { id: string }) {
   const { t } = useI18n()
   const [detail, setDetail] = useState<OrderDetail | null | false>(null)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     apiClient.get<OrderDetail>(`/api/orders/${id}`).then((res) => {
-      setDetail(res.success ? res.data : false)
+      if (res.success) setDetail(res.data)
+      else { setDetail(false); setError(true) }
     })
   }, [id])
 
   if (detail === false) {
-    return (
-      <StoreShell>
-        <div className="mx-auto max-w-md px-4 py-24 text-center text-muted-foreground">Commande introuvable.</div>
-      </StoreShell>
-    )
+    return <div className="mx-auto max-w-md px-4 py-24 text-center text-muted-foreground">{error ? 'Impossible de charger cette commande.' : 'Commande introuvable.'}</div>
   }
 
   if (!detail) {
-    return (
-      <StoreShell>
-        <div className="mx-auto max-w-md px-4 py-24 text-center text-muted-foreground">…</div>
-      </StoreShell>
-    )
+    return <div className="mx-auto max-w-md px-4 py-24 text-center text-muted-foreground">Chargement de la commande…</div>
   }
 
   const { order, items } = detail
   const StatusIcon = order.status === 'validated' ? CheckCircle2 : order.status === 'cancelled' ? Clock : Clock
 
   return (
-    <StoreShell>
-      <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="mx-auto max-w-2xl px-4 py-8">
         <h1 className="text-3xl font-bold">{t('order_track')}</h1>
 
         <div className="mt-6 rounded-2xl border bg-card p-5">
@@ -77,7 +69,6 @@ export function OrderTracking({ id }: { id: string }) {
         </div>
 
         <Button asChild variant="outline" className="mt-4"><Link href="/catalogue">{t('continue_shopping')}</Link></Button>
-      </div>
-    </StoreShell>
+    </div>
   )
 }

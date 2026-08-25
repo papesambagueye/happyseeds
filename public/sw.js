@@ -1,6 +1,6 @@
 /* TECH 221 — lightweight app-shell service worker (PWA). */
-const CACHE = 'tech221-v1'
-const APP_SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png']
+const CACHE = 'tech221-v2'
+const APP_SHELL = ['/', '/manifest.webmanifest', '/diamant.png']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(APP_SHELL)).then(() => self.skipWaiting()))

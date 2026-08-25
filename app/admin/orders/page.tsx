@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
-import { Check, X, Eye } from 'lucide-react'
+import { Check, X, Eye, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdminShell } from '@/components/admin/admin-shell'
 import { SearchInput } from '@/components/admin/search-input'
@@ -74,6 +74,17 @@ export default function AdminOrders() {
     } else toast.error(res.error)
   }
 
+  const remove = async (id: string) => {
+    if (!window.confirm('Confirmez-vous la suppression définitive de cette commande ? Cette action est irréversible.')) return
+    const res = await apiClient.delete(`/api/admin/orders/${id}`)
+    if (res.success) {
+      toast.success('Commande supprimée')
+      setOpen(false)
+      setDetail(null)
+      load()
+    } else toast.error(res.error)
+  }
+
   const tabs = [
     { key: '', label: 'Toutes' },
     { key: 'pending', label: 'En attente' },
@@ -103,8 +114,8 @@ export default function AdminOrders() {
         ))}
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border bg-card">
-        <Table>
+      <div className="mt-4 overflow-x-auto rounded-2xl border bg-card">
+        <Table className="min-w-[760px]">
           <TableHeader>
             <TableRow><TableHead>N°</TableHead><TableHead>Client</TableHead><TableHead>Total</TableHead><TableHead>Statut</TableHead><TableHead>Date</TableHead><TableHead /></TableRow>
           </TableHeader>
@@ -178,6 +189,10 @@ export default function AdminOrders() {
                   ))}
                 </div>
               </div>
+
+              <Button variant="destructive" className="w-full" onClick={() => remove(detail.order!.id)}>
+                <Trash2 className="mr-2 h-4 w-4" /> Supprimer la commande
+              </Button>
             </>
           )}
         </DialogContent>

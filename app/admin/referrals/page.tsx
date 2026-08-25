@@ -59,8 +59,8 @@ export default function AdminReferrals() {
         </Card>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border bg-card">
-        <Table>
+      <div className="mt-6 overflow-x-auto rounded-2xl border bg-card">
+        <Table className="min-w-[680px]">
           <TableHeader>
             <TableRow><TableHead>Parrain</TableHead><TableHead>Code</TableHead><TableHead>Récompensés</TableHead><TableHead>Dernier bon</TableHead></TableRow>
           </TableHeader>

@@ -46,7 +46,7 @@ export default async function FavoritesPage() {
                 </div>
                 <div className="p-4">
                   <h2 className="text-lg font-semibold">{item.product.name}</h2>
-                  <div className="mt-2 text-primary font-semibold">{(item.product.price / 100).toLocaleString('fr-FR')} FCFA</div>
+                  <div className="mt-2 text-primary font-semibold">{item.product.price.toLocaleString('fr-FR')} FCFA</div>
                   <Button asChild className="mt-4 w-full">
                     <Link href={`/produit/${item.product.slug}`}>Voir le produit</Link>
                   </Button>

@@ -66,7 +66,7 @@ export async function getReferralDashboard() {
   const pointRows = await db
     .select({ points: loyaltyEvents.points })
     .from(loyaltyEvents)
-    .where(sql`${loyaltyEvents.type} = 'voucher_bonus' AND ${loyaltyEvents.points} > 0`)
+    .where(sql`${loyaltyEvents.type} = 'points' AND ${loyaltyEvents.points} > 0 AND ${loyaltyEvents.label} LIKE 'Bonus parrainage%'`)
   const totalRewardedPoints = pointRows.reduce((sum: number, row: { points: number }) => sum + row.points, 0)
 
   return {

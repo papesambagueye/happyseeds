@@ -3,8 +3,10 @@ import { and, eq, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import {
   flashSales,
+  promotions,
   loyaltyEvents,
   orders,
+  products,
   users,
   voucherRedemptions,
   vouchers,
@@ -14,10 +16,9 @@ import { AppError } from '@/lib/errors'
 export const POINTS_REWARD_TARGET = 30
 export const POINTS_PER_1000_FCFA = 1
 export const SIGNUP_BONUS_POINTS = 5
-export const FIRST_ORDER_BONUS_POINTS = 5
-export const THIRD_ORDER_BONUS_POINTS = 5
-export const BIRTHDAY_BONUS_POINTS = 5
-export const FIRST_ORDER_MINIMUM = 800000
+export const FIRST_ORDER_BONUS_POINTS = 3
+export const BIRTHDAY_BONUS_POINTS = 3
+export const FIRST_ORDER_MINIMUM = 6500
 
 // Loyalty: first 5 orders of a customer get 10% off automatically.
 export const LOYALTY_FREE_ORDERS = 5
@@ -62,8 +63,7 @@ export async function awardSignupBonus(userId: string) {
     eq(loyaltyEvents.label, 'Bonus inscription'),
   )).limit(1)
   if (existing.length > 0) return false
-  const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
-  await recordLoyaltyEvent({ userId, type: 'points', points: SIGNUP_BONUS_POINTS, label: 'Bonus inscription', expiresAt })
+  await recordLoyaltyEvent({ userId, type: 'points', points: SIGNUP_BONUS_POINTS, label: 'Bonus inscription' })
   return true
 }
 
@@ -81,30 +81,6 @@ export async function awardFirstOrderBonusOnValidation(orderId: string) {
   if (existing.length > 0) return 0
   await recordLoyaltyEvent({ userId: order.userId, type: 'first_orders', points: FIRST_ORDER_BONUS_POINTS, label: 'Bonus première commande', orderId })
   return FIRST_ORDER_BONUS_POINTS
-}
-
-export async function awardThirdOrderBonusOnValidation(orderId: string) {
-  const rows = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1)
-  const order = rows[0]
-  if (!order?.userId || order.status !== 'validated') return 0
-
-  const validated = await countValidatedOrders(order.userId)
-  if (validated !== 3) return 0
-
-  const existing = await db.select({ id: loyaltyEvents.id }).from(loyaltyEvents).where(and(
-    eq(loyaltyEvents.userId, order.userId),
-    eq(loyaltyEvents.label, 'Bonus troisième commande'),
-  )).limit(1)
-  if (existing.length > 0) return 0
-
-  await recordLoyaltyEvent({
-    userId: order.userId,
-    type: 'first_orders',
-    points: THIRD_ORDER_BONUS_POINTS,
-    label: 'Bonus troisième commande',
-    orderId,
-  })
-  return THIRD_ORDER_BONUS_POINTS
 }
 
 export async function awardBirthdayBonus(userId: string) {
@@ -134,7 +110,7 @@ export async function awardPurchasePointsOnValidation(orderId: string) {
     .limit(1)
   if (existing.length > 0) return 0
 
-  const points = Math.floor(order.total / 100000) * POINTS_PER_1000_FCFA
+  const points = Math.floor(order.total / 1000) * POINTS_PER_1000_FCFA
   if (points <= 0) return 0
 
   await recordLoyaltyEvent({
@@ -152,13 +128,35 @@ export async function getFlashSalePriceMap() {
   const rows = await db
     .select()
     .from(flashSales)
-    .where(and(eq(flashSales.active, 1), sql`${flashSales.salePrice} > 0`))
+    .innerJoin(products, eq(flashSales.productId, products.id))
+    .where(and(eq(flashSales.active, 1), sql`${products.stock} > 0`, sql`${flashSales.salePrice} > 0`))
   const now = new Date()
   const map = new Map<string, number>()
-  for (const flashSale of rows) {
+  for (const { flashSale } of rows) {
     if (flashSale.startsAt && flashSale.startsAt > now) continue
     if (flashSale.endsAt && flashSale.endsAt < now) continue
     map.set(flashSale.productId, flashSale.salePrice)
+  }
+  return map
+}
+
+export async function getPromotionPriceMap() {
+  let rows: Array<typeof promotions.$inferSelect>
+  try {
+    rows = await db
+      .select()
+      .from(promotions)
+      .where(and(eq(promotions.active, 1), sql`${promotions.promotionalPrice} > 0`))
+  } catch (error) {
+    console.error('[PROMOTIONS READ ERROR]', error)
+    return new Map<string, number>()
+  }
+  const now = new Date()
+  const map = new Map<string, number>()
+  for (const promotion of rows) {
+    if (promotion.startsAt && promotion.startsAt > now) continue
+    if (promotion.endsAt && promotion.endsAt < now) continue
+    map.set(promotion.productId, promotion.promotionalPrice)
   }
   return map
 }
@@ -185,11 +183,11 @@ export async function userUsedVoucher(
  * Validate a voucher code and compute the discount amount for a subtotal.
  * Throws AppError with a friendly French message when not usable.
  */
-export async function validateVoucher(code: string, subtotal: number) {
+export async function validateVoucher(code: string, subtotal: number, executor: any = db) {
   const trimmed = (code || '').trim().toUpperCase()
   if (!trimmed) throw new AppError('Veuillez saisir un code', 400)
 
-  const rows = await db
+  const rows = await executor
     .select()
     .from(vouchers)
     .where(eq(vouchers.code, trimmed))

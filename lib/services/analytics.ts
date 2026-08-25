@@ -10,7 +10,7 @@ export async function getDashboardStats(days = 7) {
 
   const orderStats = await db
     .select({
-      total: sql<number>`coalesce(sum(${orders.total}), 0)`,
+      total: sql<number>`coalesce(sum(case when ${orders.status} = 'validated' then ${orders.total} else 0 end), 0)`,
       pending: sql<number>`coalesce(sum(case when ${orders.status} = 'pending' then 1 else 0 end), 0)`,
       validated: sql<number>`coalesce(sum(case when ${orders.status} = 'validated' then 1 else 0 end), 0)`,
       cancelled: sql<number>`coalesce(sum(case when ${orders.status} = 'cancelled' then 1 else 0 end), 0)`,
@@ -59,6 +59,7 @@ export async function getDashboardStats(days = 7) {
     })
     .from(oi)
     .innerJoin(orders, eq(oi.orderId, orders.id))
+    .where(sql`${orders.status} = 'validated'`)
     .groupBy(oi.productName)
     .orderBy(sql`coalesce(sum(${oi.quantity}), 0) desc`)
     .limit(8)
@@ -127,7 +128,7 @@ export async function getFinanceReport() {
     'Numéro': row.orderNumber,
     'Client': row.customerName,
     'Téléphone': row.customerPhone,
-    'Total': `${(row.total / 100).toLocaleString('fr-FR')} ${row.currency}`,
+    'Total': `${row.total.toLocaleString('fr-FR')} ${row.currency}`,
     'Statut': row.status,
     'Date': new Date(row.createdAt).toISOString().slice(0, 19).replace('T', ' '),
   }))

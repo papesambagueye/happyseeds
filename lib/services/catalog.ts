@@ -1,8 +1,8 @@
 import 'server-only'
 import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm'
 import { db } from '@/db'
-import { categories, flashSales, products, slides, reviews } from '@/db/schemas/core'
-import { attachFlashPrices } from './rewards'
+import { categories, flashSales, products, promotions, slides, reviews } from '@/db/schemas/core'
+import { attachFlashPrices, getPromotionPriceMap } from './rewards'
 
 export async function getPublishedCategories(): Promise<Array<typeof categories.$inferSelect>> {
   return db
@@ -19,7 +19,24 @@ export async function getActiveSlides() {
     .orderBy(asc(slides.sortOrder))
 }
 
-export type StoreProduct = typeof products.$inferSelect & { isFlashSale: boolean }
+export type StoreProduct = typeof products.$inferSelect & { isFlashSale: boolean; isPromotion: boolean }
+
+async function excludeFlashProducts(rows: Array<typeof products.$inferSelect>) {
+  const flashRows = (await db.select({ productId: flashSales.productId }).from(flashSales).where(eq(flashSales.active, 1))) as Array<{ productId: string }>
+  const flashIds = new Set(flashRows.map((row: { productId: string }) => row.productId))
+  return rows.filter((product) => !flashIds.has(product.id))
+}
+
+async function attachPromotionPrices(rows: Array<typeof products.$inferSelect>) {
+  const promotionPrices = await getPromotionPriceMap()
+  return rows.map((product) => {
+    const promotionalPrice = promotionPrices.get(product.id)
+    if (promotionalPrice != null && promotionalPrice < product.price) {
+      return { ...product, price: promotionalPrice, compareAtPrice: product.price, isPromotion: true }
+    }
+    return { ...product, isPromotion: false }
+  })
+}
 
 export async function getPublishedProducts(limit?: number): Promise<StoreProduct[]> {
   const base = db
@@ -28,7 +45,7 @@ export async function getPublishedProducts(limit?: number): Promise<StoreProduct
     .where(eq(products.published, 1))
     .orderBy(desc(products.createdAt))
   const rows = (limit ? (await base).slice(0, limit) : await base) as Array<typeof products.$inferSelect>
-  return (await attachFlashPrices(rows)) as StoreProduct[]
+  return (await attachFlashPrices(await attachPromotionPrices(await excludeFlashProducts(rows)))) as StoreProduct[]
 }
 
 export async function getFeaturedProducts(limit = 6): Promise<StoreProduct[]> {
@@ -38,7 +55,7 @@ export async function getFeaturedProducts(limit = 6): Promise<StoreProduct[]> {
     .where(sql`${products.featured} = 1 AND ${products.published} = 1`)
     .orderBy(desc(products.createdAt))
     .limit(limit)) as Array<typeof products.$inferSelect>
-  return (await attachFlashPrices(rows)) as StoreProduct[]
+  return (await attachFlashPrices(await attachPromotionPrices(await excludeFlashProducts(rows)))) as StoreProduct[]
 }
 
 export async function getProductBySlug(slug: string) {
@@ -75,7 +92,7 @@ export async function getProductDetail(slug: string): Promise<ProductWithCategor
     ? reviewsList.reduce((sum: number, review: (typeof reviews.$inferSelect)) => sum + review.rating, 0) / reviewsList.length
     : 0
 
-  const withFlash = await attachFlashPrices([product])
+  const withFlash = await attachFlashPrices(await attachPromotionPrices([product]))
   return {
     product: withFlash[0],
     category,
@@ -119,7 +136,7 @@ export async function searchProducts(query: {
     .where(and(...conditions))
     .orderBy(orderBy)) as Array<typeof products.$inferSelect>
 
-  return (await attachFlashPrices(rows)) as StoreProduct[]
+  return (await attachFlashPrices(await attachPromotionPrices(await excludeFlashProducts(rows)))) as StoreProduct[]
 }
 
 /** Active flash-sale products with sale price, for a "vente flash" page. */
@@ -134,6 +151,7 @@ export async function getFlashSaleProducts(): Promise<Array<{ flashSale: typeof 
     .where(sql`
       ${flashSales.active} = 1
       AND ${flashSales.salePrice} > 0
+      AND ${products.stock} > 0
       AND ${products.published} = 1
     `)
     .orderBy(desc(flashSales.createdAt))
@@ -153,6 +171,30 @@ export async function getFlashSaleProducts(): Promise<Array<{ flashSale: typeof 
       price: Math.min(row.flashSale.salePrice, row.product.price),
       compareAtPrice: row.product.price,
       isFlashSale: true,
+      isPromotion: false,
     },
   }))
+}
+
+/** Published products with a regular crossed-out price, excluding flash sales. */
+export async function getPromotionalProducts(): Promise<StoreProduct[]> {
+  const rows = (await db
+    .select({ product: products, promotion: promotions })
+    .from(promotions)
+    .innerJoin(products, eq(promotions.productId, products.id))
+    .where(sql`${promotions.active} = 1 AND ${products.published} = 1`)
+    .orderBy(desc(promotions.createdAt))) as Array<{
+      product: typeof products.$inferSelect
+      promotion: typeof promotions.$inferSelect
+    }>
+  const now = new Date()
+  return rows
+    .filter(({ promotion }) => (!promotion.startsAt || promotion.startsAt <= now) && (!promotion.endsAt || promotion.endsAt >= now))
+    .map(({ product, promotion }) => ({
+      ...product,
+      price: Math.min(promotion.promotionalPrice, product.price),
+      compareAtPrice: product.price,
+      isFlashSale: false,
+      isPromotion: true,
+    })) as StoreProduct[]
 }

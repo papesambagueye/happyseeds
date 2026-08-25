@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev -p 13000",
-    "build": "pnpm check:server-boundaries && next build",
+    "build": "node scripts/check-server-boundaries.mjs && next build",
     "start": "next start -p 13000",
     "test": "node --import tsx --test lib/request.test.ts scripts/check-server-boundaries.test.mjs",
     "typecheck": "tsc --noEmit",

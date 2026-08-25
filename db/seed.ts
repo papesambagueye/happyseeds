@@ -7,7 +7,7 @@ import { config as loadEnv } from 'dotenv'
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
-import { categories, products, slides, storeConfig, siteMessages, vouchers, flashSales } from './schemas/core'
+import { categories, products, slides, storeConfig, siteMessages, vouchers, promotions } from './schemas/core'
 
 loadEnv()
 const DATABASE_URL = process.env.DATABASE_URL
@@ -139,26 +139,25 @@ async function seed() {
     })
   }
 
-  // Demo flash sales on the two featured products that have a compareAtPrice
-  const flashTargets: Array<{ slug: string; salePrice: number; endsAt: Date }> = [
-    { slug: 'ecouteurs-sans-fil-pro', salePrice: 19000, endsAt: new Date(Date.now() + 3 * 86400000) },
-    { slug: 'casque-studio-anc', salePrice: 95000, endsAt: new Date(Date.now() + 2 * 86400000 + 5 * 3600000) },
+  // Demo promotions apply to normal catalogue products.
+  const promotionTargets: Array<{ slug: string; promotionalPrice: number; endsAt: Date }> = [
+    { slug: 'ecouteurs-sans-fil-pro', promotionalPrice: 19000, endsAt: new Date(Date.now() + 3 * 86400000) },
+    { slug: 'casque-studio-anc', promotionalPrice: 95000, endsAt: new Date(Date.now() + 2 * 86400000 + 5 * 3600000) },
   ]
-  for (const t of flashTargets) {
+  for (const t of promotionTargets) {
     const p = await db.select().from(products).where(eq(products.slug, t.slug))
     if (p.length === 0) continue
-    const existing = await db.select().from(flashSales).where(eq(flashSales.productId, p[0].id))
+    const existing = await db.select().from(promotions).where(eq(promotions.productId, p[0].id))
     if (existing.length === 0) {
-      await db.insert(flashSales).values({
+      await db.insert(promotions).values({
         productId: p[0].id,
-        salePrice: t.salePrice,
-        label: 'Offre flash',
+        promotionalPrice: t.promotionalPrice,
         active: 1,
         endsAt: t.endsAt,
       })
     } else {
       // Ensure a timer is set on existing demo rows too.
-      await db.update(flashSales).set({ endsAt: t.endsAt }).where(eq(flashSales.id, existing[0].id))
+      await db.update(promotions).set({ endsAt: t.endsAt }).where(eq(promotions.id, existing[0].id))
     }
   }
 

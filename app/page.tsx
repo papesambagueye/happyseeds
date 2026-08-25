@@ -5,19 +5,53 @@ import { StoreShell } from '@/components/store/shell'
 import { Button } from '@/components/ui/button'
 import { HeroCarousel } from '@/components/store/hero-carousel'
 import { ProductCard } from '@/components/store/product-card'
-import { getActiveSlides, getFeaturedProducts } from '@/lib/services/catalog'
+import { getActiveSlides, getFeaturedProducts, getPublishedCategories } from '@/lib/services/catalog'
+import { db } from '@/db'
+import { storeConfig } from '@/db/schemas/core'
+import { eq } from 'drizzle-orm'
 
-const categories = [
-  { title: 'Téléphones', titleEn: 'Phones', href: '/catalogue' },
-  { title: 'Accessoires', titleEn: 'Accessories', href: '/catalogue' },
-  { title: 'Audio', titleEn: 'Audio', href: '/catalogue' },
-  { title: 'Ordinateurs', titleEn: 'Computers', href: '/catalogue' },
-]
+export const dynamic = 'force-dynamic'
+
+const defaultHomeContent = {
+  heroImage: 'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?w=1200',
+  heroEyebrow: 'TECH 221',
+  heroTitle: "La tech qu'on aime, au bon prix.",
+  heroDescription: 'Smartphones, audio, accessoires et gadgets premium conçus pour faciliter votre quotidien.',
+  heroButton: 'Découvrir la boutique',
+  promoButton: 'Voir les promos',
+  benefits: [
+    { title: 'Livraison rapide', text: 'Expédition fiable et suivi simple.' },
+    { title: 'Paiement sécurisé', text: 'Détails de commande envoyés via WhatsApp.' },
+    { title: 'Produits sélectionnés', text: 'Une gamme pensée pour le quotidien et le style.' },
+  ],
+  categoriesTitle: 'Nos catégories',
+  categoriesLink: 'Voir tout',
+  categories: [
+    { title: 'Téléphones', titleEn: 'Phones' },
+    { title: 'Accessoires', titleEn: 'Accessories' },
+    { title: 'Audio', titleEn: 'Audio' },
+    { title: 'Ordinateurs', titleEn: 'Computers' },
+  ],
+  featuredTitle: 'Produits en vedette',
+  featuredLink: 'Tout explorer',
+}
+
+async function getHomeContent() {
+  const rows = await db.select().from(storeConfig).where(eq(storeConfig.key, 'home_content'))
+  if (!rows[0]?.value) return defaultHomeContent
+  try {
+    return { ...defaultHomeContent, ...JSON.parse(rows[0].value) }
+  } catch {
+    return defaultHomeContent
+  }
+}
 
 export default async function HomePage() {
-  const [slides, featuredProducts] = await Promise.all([
+  const [slides, featuredProducts, content, publishedCategories] = await Promise.all([
     getActiveSlides().catch(() => []),
     getFeaturedProducts().catch(() => []),
+    getHomeContent().catch(() => defaultHomeContent),
+    getPublishedCategories().catch(() => []),
   ])
 
   const structuredData = {
@@ -42,20 +76,20 @@ export default async function HomePage() {
         <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-[0.9fr_1.1fr] md:items-center md:py-20">
           <div>
             <p className="inline-flex rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-white">
-              TECH 221
+              {content.heroEyebrow}
             </p>
             <h1 className="mt-5 max-w-xl text-4xl font-black leading-[1.05] sm:text-6xl">
-              La tech qu&apos;on aime, au bon prix.
+              {content.heroTitle}
             </h1>
             <p className="mt-4 max-w-xl text-base text-white/75">
-              Smartphones, audio, accessoires et gadgets premium conçus pour faciliter votre quotidien.
+              {content.heroDescription}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg" className="shadow-[0_18px_35px_rgba(0,123,255,0.35)]">
-                <Link href="/catalogue">Découvrir la boutique</Link>
+                <Link href="/catalogue">{content.heroButton}</Link>
               </Button>
               <Button asChild variant="destructive" size="lg">
-                <Link href="/promos">Voir les promos</Link>
+                <Link href="/promos">{content.promoButton}</Link>
               </Button>
             </div>
           </div>
@@ -63,7 +97,7 @@ export default async function HomePage() {
           <div className="relative mx-auto w-full max-w-xl">
             <div className="floaty glow-ring overflow-hidden rounded-2xl border-4 border-white/15 bg-white/5 shadow-[0_28px_80px_rgba(0,0,0,0.45)] backdrop-blur-sm">
               <Image
-                src="https://images.unsplash.com/photo-1545239351-1141bd82e8a6?w=1200"
+                src={content.heroImage}
                 alt="Produits tech"
                 width={1200}
                 height={900}
@@ -77,22 +111,22 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-7xl px-4 py-10">
         <div className="grid gap-4 md:grid-cols-3">
-          <FeatureCard icon={<Truck className="h-5 w-5" />} title="Livraison rapide" text="Expédition fiable et suivi simple." />
-          <FeatureCard icon={<ShieldCheck className="h-5 w-5" />} title="Paiement sécurisé" text="Détails de commande envoyés via WhatsApp." />
-          <FeatureCard icon={<Sparkles className="h-5 w-5" />} title="Produits sélectionnés" text="Une gamme pensée pour le quotidien et le style." />
+          <FeatureCard icon={<Truck className="h-5 w-5" />} {...content.benefits[0]} />
+          <FeatureCard icon={<ShieldCheck className="h-5 w-5" />} {...content.benefits[1]} />
+          <FeatureCard icon={<Sparkles className="h-5 w-5" />} {...content.benefits[2]} />
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-8">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Nos catégories</h2>
+          <h2 className="text-2xl font-bold">{content.categoriesTitle}</h2>
           <Link href="/catalogue" className="inline-flex items-center gap-1 text-sm font-medium text-primary">
-            Voir tout <ArrowRight className="h-4 w-4" />
+            {content.categoriesLink} <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {categories.map((category) => (
-            <Link key={category.title} href={category.href} className="soft-card block rounded-2xl p-5">
+          {content.categories.map((category: { title: string; titleEn: string }, index: number) => (
+            <Link key={category.title} href={`/catalogue?category=${publishedCategories[index]?.id ?? ''}`} className="soft-card block rounded-2xl p-5">
               <div className="text-sm text-muted-foreground">{category.titleEn}</div>
               <div className="mt-3 text-xl font-semibold text-black">{category.title}</div>
             </Link>
@@ -102,9 +136,9 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-7xl px-4 py-10">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Produits en vedette</h2>
+          <h2 className="text-2xl font-bold">{content.featuredTitle}</h2>
           <Link href="/catalogue" className="inline-flex items-center gap-1 text-sm font-medium text-primary">
-            Tout explorer <ArrowRight className="h-4 w-4" />
+            {content.featuredLink} <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 

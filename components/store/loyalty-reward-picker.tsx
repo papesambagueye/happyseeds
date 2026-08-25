@@ -41,7 +41,7 @@ export function LoyaltyRewardPicker({ points, products }: { points: number; prod
     <div className="rounded-2xl border bg-card p-6">
       <div className="flex items-center gap-2"><Gift className="h-5 w-5 text-primary" /><h2 className="text-lg font-semibold">Vos points</h2></div>
       <p className="mt-2 text-3xl font-bold text-primary">{points} <span className="text-sm font-normal text-muted-foreground">points</span></p>
-      <p className="mt-2 text-sm text-muted-foreground">Échangez vos points contre un produit gratuit selon trois paliers. Les points sont gagnés avec les commandes validées et le parrainage.</p>
+      <p className="mt-2 text-sm text-muted-foreground">Échangez vos points contre un produit gratuit selon trois paliers. Un anniversaire rapporte 3 points et une première commande éligible rapporte 3 points bonus.</p>
       {ready && products.length > 0 && !reward && (
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <select value={selected} onChange={(event) => setSelected(event.target.value)} className="h-10 flex-1 rounded-md border bg-background px-3 text-sm">

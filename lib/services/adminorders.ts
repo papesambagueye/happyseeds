@@ -1,10 +1,10 @@
 import 'server-only'
 import { desc, eq, ilike, or, sql } from 'drizzle-orm'
 import { db } from '@/db'
-import { orderItems, orders, products, storeConfig } from '@/db/schemas/core'
+import { flashSales, orderItems, orders, products, storeConfig } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
 import { awardReferralBonusOnValidation, awardReferralPointsForOrder } from './referrals'
-import { awardFirstOrderBonusOnValidation, awardPurchasePointsOnValidation, awardThirdOrderBonusOnValidation } from './rewards'
+import { awardFirstOrderBonusOnValidation, awardPurchasePointsOnValidation } from './rewards'
 
 export async function listAdminOrders(status?: string, q?: string) {
   const term = q?.trim()
@@ -43,7 +43,7 @@ export async function listAdminOrders(status?: string, q?: string) {
 }
 
 async function upsertTurnover(tx: any, amount: number) {
-  // store_config stores values as text; keep turnover in cents under key 'turnover_cents'
+  // Keep this legacy key for compatibility; its value is stored in whole FCFA.
   const rows = await tx.select().from(storeConfig).where(eq(storeConfig.key, 'turnover_cents'))
   if (rows.length > 0) {
     const current = Number(rows[0].value || 0)
@@ -73,6 +73,14 @@ export async function validateOrder(orderId: string) {
       // Validation confirms payment → decrement stock (already reserved at order
       // time; here we simply confirm status) and increment turnover.
       await tx.update(orders).set({ status: 'validated', updatedAt: sql`now()` }).where(eq(orders.id, order.id))
+      await tx
+        .update(flashSales)
+        .set({ active: 0 })
+        .where(sql`${flashSales.productId} IN (SELECT ${orderItems.productId} FROM ${orderItems} WHERE ${orderItems.orderId} = ${order.id})`)
+      await tx
+        .update(products)
+        .set({ published: 0, updatedAt: sql`now()` })
+        .where(sql`${products.id} IN (SELECT ${orderItems.productId} FROM ${orderItems} WHERE ${orderItems.orderId} = ${order.id})`)
       await upsertTurnover(tx, Number(order.total) || 0)
     }
 
@@ -84,7 +92,6 @@ export async function validateOrder(orderId: string) {
     await awardReferralPointsForOrder(orderId)
     await awardPurchasePointsOnValidation(orderId)
     await awardFirstOrderBonusOnValidation(orderId)
-    await awardThirdOrderBonusOnValidation(orderId)
   } catch (err) {
     console.error('Referral bonus failed for order', orderId, err)
   }
@@ -119,6 +126,14 @@ export async function updateOrderStatus(orderId: string, nextStatus: 'pending' |
 
     if (previousStatus !== 'validated' && nextStatus === 'validated') {
       await upsertTurnover(tx, Number(order.total) || 0)
+      await tx
+        .update(flashSales)
+        .set({ active: 0 })
+        .where(sql`${flashSales.productId} IN (SELECT ${orderItems.productId} FROM ${orderItems} WHERE ${orderItems.orderId} = ${order.id})`)
+      await tx
+        .update(products)
+        .set({ published: 0, updatedAt: sql`now()` })
+        .where(sql`${products.id} IN (SELECT ${orderItems.productId} FROM ${orderItems} WHERE ${orderItems.orderId} = ${order.id})`)
     } else if (previousStatus === 'validated' && nextStatus !== 'validated') {
       const cfg = await tx.select().from(storeConfig).where(eq(storeConfig.key, 'turnover_cents'))
       if (cfg.length > 0) {
@@ -137,7 +152,6 @@ export async function updateOrderStatus(orderId: string, nextStatus: 'pending' |
       await awardReferralPointsForOrder(orderId)
       await awardPurchasePointsOnValidation(orderId)
       await awardFirstOrderBonusOnValidation(orderId)
-      await awardThirdOrderBonusOnValidation(orderId)
     } catch (error) {
       console.error('Referral bonus failed for order', orderId, error)
     }
@@ -183,4 +197,40 @@ export async function cancelOrder(orderId: string) {
     await db.update(orders).set({ status: 'cancelled', updatedAt: sql`now()` }).where(eq(orders.id, order.id))
   }
   return { cancelled: true }
+}
+
+export async function deleteOrder(orderId: string) {
+  await db.transaction(async (tx: any) => {
+    const rows = await tx.select().from(orders).where(eq(orders.id, orderId)).for('update')
+    if (rows.length === 0) throw new AppError('Commande introuvable', 404, 'NOT_FOUND')
+
+    const order = rows[0]
+    const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, order.id))
+
+    if (order.status !== 'cancelled') {
+      for (const item of items) {
+        if (item.productId) {
+          await tx
+            .update(products)
+            .set({ stock: sql`${products.stock} + ${item.quantity}` })
+            .where(eq(products.id, item.productId))
+        }
+      }
+    }
+
+    if (order.status === 'validated') {
+      const cfg = await tx.select().from(storeConfig).where(eq(storeConfig.key, 'turnover_cents'))
+      if (cfg.length > 0) {
+        const nextTurnover = Math.max(0, Number(cfg[0].value || 0) - Number(order.total || 0))
+        await tx
+          .update(storeConfig)
+          .set({ value: String(nextTurnover), updatedAt: sql`now()` })
+          .where(eq(storeConfig.key, 'turnover_cents'))
+      }
+    }
+
+    await tx.delete(orders).where(eq(orders.id, order.id))
+  })
+
+  return { deleted: true }
 }

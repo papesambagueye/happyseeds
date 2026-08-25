@@ -21,14 +21,14 @@ export function ReferralPanel({ code, link }: { code: string; link: string }) {
         <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Gift className="h-5 w-5" /></div>
         <div>
           <h2 className="font-semibold">Comment ça marche ?</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Invitez un proche avec votre code. Votre premier filleul validé vous rapporte 10 points. Cinq filleuls dépensant chacun au moins 5 000 FCFA vous donnent droit à un AirPod, une seule fois.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Invitez 3 filleuls pour gagner 4 points, puis 5 points lorsque 3 filleuls cumulent 10 000 FCFA d’achats validés. Si vous échangez un cadeau et que votre solde tombe sous 10 points, 5 nouveaux filleuls via votre lien vous octroient directement 10 points.</p>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Step number="1" text="Copiez votre code ou votre lien." />
         <Step number="2" text="Votre proche l’utilise à l’inscription." />
-        <Step number="3" text="Sa première commande validée déclenche votre gain." />
+        <Step number="3" text="Les paliers se déclenchent automatiquement à 3 filleuls." />
       </div>
 
       <div className="rounded-xl bg-primary/5 p-4">
@@ -51,7 +51,7 @@ export function ReferralPanel({ code, link }: { code: string; link: string }) {
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">Chaque commande validée vous rapporte aussi des points. À 50 points, vous pourrez choisir un produit éligible de moins de 10 000 FCFA.</p>
+      <p className="text-sm text-muted-foreground">Chaque commande validée rapporte 1 point par tranche de 1 000 FCFA. Après un cadeau, 5 nouveaux filleuls peuvent relancer le parrainage pour 10 points si votre solde est inférieur à 10.</p>
     </div>
   )
 }

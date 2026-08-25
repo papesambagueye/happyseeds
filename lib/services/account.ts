@@ -2,11 +2,7 @@ import 'server-only'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { loyaltyEvents, orders, referralRewards } from '@/db/schemas/core'
-import {
-  LOYALTY_DISCOUNT_PERCENT,
-  LOYALTY_FREE_ORDERS,
-  countValidatedOrders,
-} from './rewards'
+import { countValidatedOrders } from './rewards'
 import { getReferralOverview, listReferralRewards } from './referrals'
 import { awardBirthdayBonus } from './rewards'
 import { formatPrice } from '@/lib/utils'
@@ -64,13 +60,7 @@ export async function getAccountSummary(userId: string) {
       .where(and(eq(loyaltyEvents.userId, userId), sql`(${loyaltyEvents.expiresAt} IS NULL OR ${loyaltyEvents.expiresAt} > now())`)),
   ])
 
-  const loyalty = {
-    validatedOrders: validated,
-    cap: LOYALTY_FREE_ORDERS,
-    percent: LOYALTY_DISCOUNT_PERCENT,
-    qualified: validated < LOYALTY_FREE_ORDERS,
-    remaining: Math.max(0, LOYALTY_FREE_ORDERS - validated),
-  }
+  const loyalty = { validatedOrders: validated, qualified: false }
 
   const earnedBonus = bonusRes.reduce((sum, row) => sum + row.amount, 0)
 

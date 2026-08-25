@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { StoreShell } from '@/components/store/shell'
 import { Button } from '@/components/ui/button'
@@ -23,6 +23,16 @@ export default function CartPage() {
   const [deliveryAddress, setDeliveryAddress] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [loyaltyPercent, setLoyaltyPercent] = useState(0)
+
+  useEffect(() => {
+    apiClient.get<{ qualified: boolean; percent: number }>('/api/rewards/loyalty').then((res) => {
+      if (res.success) setLoyaltyPercent(res.data.qualified ? res.data.percent : 0)
+    })
+  }, [])
+
+  const loyaltyDiscount = Math.round(subtotal * loyaltyPercent / 100)
+  const estimatedTotal = Math.max(0, subtotal - loyaltyDiscount)
 
   const placeWhatsAppOrder = async () => {
     if (!customerName.trim() || !customerPhone.trim()) {
@@ -112,9 +122,15 @@ export default function CartPage() {
                 <span>Livraison</span>
                 <span>{deliveryRequested ? 'À convenir sur WhatsApp' : 'Retrait sur place'}</span>
               </div>
+              {loyaltyDiscount > 0 && (
+                <div className="mt-2 flex items-center justify-between text-sm text-emerald-700">
+                  <span>Remise fidélité ({loyaltyPercent} %)</span>
+                  <span>-{formatPrice(loyaltyDiscount, 'FCFA')}</span>
+                </div>
+              )}
               <div className="mt-4 border-t pt-4 flex items-center justify-between text-lg font-bold">
                 <span>Total</span>
-                <span>{formatPrice(subtotal, 'FCFA')}</span>
+                <span>{formatPrice(estimatedTotal, 'FCFA')}</span>
               </div>
               <p className="mt-2 text-xs text-muted-foreground">Le montant et les détails de livraison seront confirmés directement sur WhatsApp.</p>
               <div className="mt-6 space-y-3">

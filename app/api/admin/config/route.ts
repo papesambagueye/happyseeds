@@ -2,6 +2,7 @@ import 'server-only'
 
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 
 import { db } from '@/db'
 import { storeConfig } from '@/db/schemas/core'
@@ -47,6 +48,7 @@ export async function PUT(request: Request) {
       }
     }
 
+    revalidatePath('/', 'page')
     return NextResponse.json({ success: true, data: await readConfig() })
   } catch (error) {
     return handleApiError(error)

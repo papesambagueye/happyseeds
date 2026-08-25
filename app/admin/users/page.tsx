@@ -70,8 +70,8 @@ export default function AdminUsers() {
         <SearchInput value={query} onSearch={setQuery} placeholder="Rechercher (nom, e-mail)…" className="w-64 sm:w-80" />
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border bg-card">
-        <Table>
+      <div className="mt-6 overflow-x-auto rounded-2xl border bg-card">
+        <Table className="min-w-[1050px]">
           <TableHeader>
             <TableRow><TableHead>Utilisateur</TableHead><TableHead>E-mail</TableHead><TableHead>Rôle</TableHead><TableHead>Statut</TableHead><TableHead>Sanction</TableHead><TableHead>Commandes</TableHead><TableHead>Dépenses validées</TableHead><TableHead>Inscrit</TableHead></TableRow>
           </TableHeader>

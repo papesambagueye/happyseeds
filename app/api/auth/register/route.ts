@@ -9,7 +9,7 @@ import { handleApiError } from '@/lib/api-error-response'
 import { ValidationError } from '@/lib/errors'
 import { hashPassword } from '@/lib/auth/password'
 import { createSession } from '@/lib/auth/session'
-import { attachReferral, getReferrerByCode } from '@/lib/services/referrals'
+import { attachReferral, awardReferralSignupMilestones, getReferrerByCode } from '@/lib/services/referrals'
 import { awardSignupBonus } from '@/lib/services/rewards'
 
 export async function POST(request: Request) {
@@ -79,6 +79,7 @@ export async function POST(request: Request) {
       status: 'active',
     }).returning({ id: users.id })
     if (referrerId && inserted[0]) await attachReferral(inserted[0].id, referrerId)
+    if (referrerId) await awardReferralSignupMilestones(referrerId)
     if (inserted[0]) await awardSignupBonus(inserted[0].id)
 
     const created = await db

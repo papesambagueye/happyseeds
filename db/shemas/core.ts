@@ -86,8 +86,8 @@ export const products = pgTable(
     slug: text('slug').notNull().unique(),
     description: text('description'), // FR
     descriptionEn: text('description_en'), // EN
-    price: integer('price').notNull().default(0), // in cents
-    compareAtPrice: integer('compare_at_price'), // in cents, for discounts
+    price: integer('price').notNull().default(0), // whole FCFA
+    compareAtPrice: integer('compare_at_price'), // whole FCFA, for discounts
     currency: text('currency').notNull().default('FCFA'),
     stock: integer('stock').notNull().default(0),
     image: text('image'), // main image
@@ -115,8 +115,8 @@ export const orders = pgTable(
     customerName: text('customer_name').notNull(),
     customerPhone: text('customer_phone').notNull(),
     itemSummary: text('item_summary').notNull(), // readable snapshot for WhatsApp
-    total: integer('total').notNull().default(0), // in cents
-    discount: integer('discount').notNull().default(0), // applied discount in cents
+    total: integer('total').notNull().default(0), // whole FCFA
+    discount: integer('discount').notNull().default(0), // applied discount in FCFA
     voucherCode: text('voucher_code'), // voucher used, if any
     currency: text('currency').notNull().default('FCFA'),
     status: text('status', { enum: ['pending', 'validated', 'cancelled', 'on_hold'] })
@@ -164,7 +164,7 @@ export const loyaltyEvents = pgTable(
     type: text('type', { enum: ['first_orders', 'points', 'voucher_bonus'] })
       .notNull()
       .default('points'),
-    points: integer('points').notNull().default(0), // points awarded (or discount in cents)
+    points: integer('points').notNull().default(0), // points awarded
     label: text('label'), // human-readable description
     orderId: text('order_id').references(() => orders.id, { onDelete: 'set null' }),
     expiresAt: timestamp('expires_at', { withTimezone: true }),
@@ -185,7 +185,7 @@ export const vouchers = pgTable(
       .$defaultFn(() => crypto.randomUUID()),
     code: text('code').notNull().unique(),
     type: text('type', { enum: ['percent', 'fixed'] }).notNull().default('percent'),
-    amount: integer('amount').notNull().default(0), // percent (1..100) or fixed cents
+    amount: integer('amount').notNull().default(0), // percent (1..100) or fixed FCFA
     maxUses: integer('max_uses').notNull().default(1), // -1 = unlimited
     usedCount: integer('used_count').notNull().default(0),
     active: integer('active').notNull().default(1),
@@ -215,7 +215,7 @@ export const voucherRedemptions = pgTable(
     orderId: text('order_id')
       .notNull()
       .references(() => orders.id, { onDelete: 'cascade' }),
-    amount: integer('amount').notNull().default(0), // discount applied in cents
+    amount: integer('amount').notNull().default(0), // discount applied in FCFA
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [
@@ -242,6 +242,24 @@ export const rewardClaims = pgTable(
   ]
 )
 
+export const raffleDraws = pgTable('raffle_draws', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  month: text('month').notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const raffleEntries = pgTable('raffle_entries', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  drawId: text('draw_id').notNull().references(() => raffleDraws.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  rank: integer('rank').notNull(),
+  prize: text('prize'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex('raffle_entries_draw_user_idx').on(table.drawId, table.userId),
+  index('raffle_entries_draw_idx').on(table.drawId),
+])
+
 // Vent-flash: a product temporarily sold at a reduced price.
 export const flashSales = pgTable(
   'flash_sales',
@@ -262,6 +280,25 @@ export const flashSales = pgTable(
   (table) => [
     index('flash_sales_active_idx').on(table.active),
     index('flash_sales_product_idx').on(table.productId),
+  ]
+)
+
+// Promotions: temporary prices for products already in the catalogue.
+export const promotions = pgTable(
+  'promotions',
+  {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    productId: text('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    promotionalPrice: integer('promotional_price').notNull(),
+    startsAt: timestamp('starts_at', { withTimezone: true }),
+    endsAt: timestamp('ends_at', { withTimezone: true }),
+    active: integer('active').notNull().default(1),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('promotions_product_idx').on(table.productId),
+    index('promotions_active_idx').on(table.active),
   ]
 )
 
@@ -286,7 +323,7 @@ export const referralRewards = pgTable(
     voucherId: text('voucher_id').references(() => vouchers.id, {
       onDelete: 'set null',
     }), // bonus voucher granted
-    amount: integer('amount').notNull().default(0), // bonus in cents
+    amount: integer('amount').notNull().default(0), // bonus in FCFA
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [
@@ -380,3 +417,4 @@ export const storeConfig = pgTable('store_config', {
   value: text('value'),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
+

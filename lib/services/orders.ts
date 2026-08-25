@@ -1,15 +1,9 @@
 import 'server-only'
 import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '@/db'
-import { orderItems, orders, products, storeConfig, voucherRedemptions } from '@/db/schemas/core'
+import { orderItems, orders, products, storeConfig, users, voucherRedemptions, vouchers } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
-import {
-  getFlashSalePriceMap,
-  getLoyaltyDiscount,
-  recordLoyaltyEvent,
-  redeemVoucher,
-  validateVoucher,
-} from './rewards'
+import { getFlashSalePriceMap, getPromotionPriceMap, validateVoucher } from './rewards'
 
 export type CartLine = {
   productId: string
@@ -53,8 +47,8 @@ export async function getWhatsappNumber(): Promise<string> {
     : WHATSAPP_DEFAULT
 }
 
-function formatPrice(cents: number, currency: string): string {
-  return `${(cents / 100).toLocaleString('fr-FR')} ${currency}`
+function formatPrice(amount: number, currency: string): string {
+  return `${amount.toLocaleString('fr-FR')} ${currency}`
 }
 
 /** Builds the human-readable WhatsApp message snapshot for an order. */
@@ -102,133 +96,122 @@ export async function createOrder(input: OrderInput) {
     throw new AppError('Veuillez renseigner l’adresse de livraison.', 400)
   }
 
-  // Verify stock and compute the order with a fresh product snapshot.
-  const productIds = items.map((i) => i.productId)
-  const fresh = await db
-    .select({
-      id: products.id,
-      name: products.name,
-      price: products.price,
-      stock: products.stock,
-      currency: products.currency,
-      published: products.published,
-    })
-    .from(products)
-    .where(inArray(products.id, productIds))
-
-  const priceMap = new Map<string, { id: string; name: string; price: number; stock: number; currency: string; published: number }>(
-    fresh.map((product: { id: string; name: string; price: number; stock: number; currency: string; published: number }) => [product.id, product])
-  )
-  const flashPrices = await getFlashSalePriceMap()
-
-  let subtotal = 0
-  const orderItemRows: { productId: string; productName: string; quantity: number; unitPrice: number }[] = []
-  for (const item of items) {
-    if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
-      throw new AppError(`Quantité invalide pour « ${item.name} »`, 400)
-    }
-    const product = priceMap.get(item.productId)
-    if (!product) throw new AppError(`Produit introuvable : ${item.name}`, 400)
-    if (product.stock < item.quantity) {
-      throw new AppError(
-        `Stock insuffisant pour « ${item.name} » (disponible : ${product.stock})`,
-        409
-      )
-    }
-    const flashPrice = flashPrices.get(product.id)
-    const unit = flashPrice != null && flashPrice < product.price ? flashPrice : product.price
-    const lineTotal = unit * item.quantity
-    subtotal += lineTotal
-    orderItemRows.push({
-      productId: product.id,
-      productName: product.name,
-      quantity: item.quantity,
-      unitPrice: unit,
-    })
-  }
-
-  // Loyalty: 10% off the first N orders of a logged-in customer.
-  const loyalty = input.userId ? await getLoyaltyDiscount(input.userId) : { qualified: false, percent: 0 }
-  let discount = 0
-  let loyaltyUsed = false
-  if (loyalty.qualified) {
-    discount += Math.round((subtotal * loyalty.percent) / 100)
-    loyaltyUsed = true
-  }
-
-  // Voucher: additional code discount (stacked after loyalty).
-  let voucher: { id: string; code: string; title: string | null } | null = null
-  let voucherDiscount = 0
-  if (voucherCode && input.userId) {
-    const { voucher: v, discount: d } = await validateVoucher(voucherCode, subtotal)
-    const alreadyUsed = await db
-      .select({ id: voucherRedemptions.id })
-      .from(voucherRedemptions)
-      .where(
-        and(eq(voucherRedemptions.userId, input.userId), eq(voucherRedemptions.voucherId, v.id))
-      )
-      .limit(1)
-    if (alreadyUsed.length > 0) {
-      throw new AppError('Vous avez déjà utilisé ce code promo', 400)
-    }
-    voucher = { id: v.id, code: v.code, title: v.title }
-    voucherDiscount = d
-    discount += d
-  }
-
-  const deliveryFee = 0
-  const total = Math.max(0, subtotal - discount)
-  const currency = priceMap.values().next().value?.currency ?? 'FCFA'
   const orderNumber = `CMD-${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 90 + 10)}`
 
-  const inserted = await db
-    .insert(orders)
-    .values({
+  const result = await db.transaction(async (tx: any) => {
+    const productIds = [...new Set(items.map((item) => item.productId))]
+    const fresh = await tx
+      .select({ id: products.id, name: products.name, price: products.price, stock: products.stock, currency: products.currency })
+      .from(products)
+      .where(inArray(products.id, productIds))
+      .for('update')
+    const priceMap = new Map<string, { id: string; name: string; price: number; stock: number; currency: string }>(
+      fresh.map((product) => [product.id, product]),
+    )
+    const flashPrices = await getFlashSalePriceMap()
+    const promotionPrices = await getPromotionPriceMap()
+    const quantities = new Map<string, number>()
+    for (const item of items) {
+      if (!Number.isInteger(item.quantity) || item.quantity <= 0) throw new AppError(`Quantité invalide pour « ${item.name} »`, 400)
+      quantities.set(item.productId, (quantities.get(item.productId) ?? 0) + item.quantity)
+    }
+
+    let subtotal = 0
+    const orderItemRows: { productId: string; productName: string; quantity: number; unitPrice: number }[] = []
+    for (const item of items) {
+      const product = priceMap.get(item.productId)
+      if (!product) throw new AppError(`Produit introuvable : ${item.name}`, 400)
+      const quantity = quantities.get(item.productId) ?? 0
+      if (product.stock < quantity) throw new AppError(`Stock insuffisant pour « ${product.name} » (disponible : ${product.stock})`, 409)
+      if (orderItemRows.some((row) => row.productId === product.id)) continue
+      const flashPrice = flashPrices.get(product.id)
+      const promotionPrice = promotionPrices.get(product.id)
+      const unitPrice = flashPrice != null && flashPrice < product.price ? flashPrice : promotionPrice != null && promotionPrice < product.price ? promotionPrice : product.price
+      subtotal += unitPrice * quantity
+      orderItemRows.push({ productId: product.id, productName: product.name, quantity, unitPrice })
+    }
+
+    const validatedRows = input.userId
+      ? await (async () => {
+          await tx.select({ id: users.id }).from(users).where(eq(users.id, input.userId!)).for('update')
+          return tx
+            .select({ n: sql<number>`count(*)` })
+            .from(orders)
+            .where(and(eq(orders.userId, input.userId!), eq(orders.status, 'validated')))
+        })()
+      : []
+    const loyaltyQualified = Boolean(input.userId && Number(validatedRows[0]?.n ?? 0) < 5)
+    const loyaltyDiscount = loyaltyQualified ? Math.round(subtotal * 10 / 100) : 0
+    let discount = loyaltyDiscount
+    let voucher: { id: string; code: string; title: string | null } | null = null
+    let voucherDiscount = 0
+    if (voucherCode && input.userId) {
+      const { voucher: v, discount: d } = await validateVoucher(voucherCode, subtotal - loyaltyDiscount, tx)
+      const alreadyUsed = await tx.select({ id: voucherRedemptions.id }).from(voucherRedemptions).where(and(eq(voucherRedemptions.userId, input.userId), eq(voucherRedemptions.voucherId, v.id))).limit(1)
+      if (alreadyUsed.length > 0) throw new AppError('Vous avez déjà utilisé ce code promo', 400)
+      voucher = { id: v.id, code: v.code, title: v.title }
+      voucherDiscount = d
+      discount += d
+    }
+
+    const deliveryFee = 0
+    const total = Math.max(0, subtotal - discount)
+    const currency = fresh[0]?.currency ?? 'FCFA'
+    const inserted = await tx.insert(orders).values({
       orderNumber,
       userId: input.userId ?? null,
       customerName,
       customerPhone,
-      itemSummary: buildOrderMessage(orderNumber, customerName, items, total, currency, deliveryFee, deliveryRequested, deliveryAddress.trim()),
+      itemSummary: buildOrderMessage(
+        orderNumber,
+        customerName,
+        orderItemRows.map((item) => ({
+          productId: item.productId,
+          name: item.productName,
+          unitPrice: item.unitPrice,
+          quantity: item.quantity,
+        })),
+        total,
+        currency,
+        deliveryFee,
+        deliveryRequested,
+        deliveryAddress.trim(),
+      ),
       total,
       discount,
       voucherCode: voucher?.code ?? null,
       currency,
-    })
-    .returning()
+    }).returning()
+    const order = inserted[0]
+    await tx.insert(orderItems).values(orderItemRows.map((row) => ({ ...row, orderId: order.id })))
+    if (input.userId && voucher) {
+      await tx.insert(voucherRedemptions).values({ voucherId: voucher.id, userId: input.userId, orderId: order.id, amount: voucherDiscount })
+      await tx.update(vouchers).set({ usedCount: sql`${vouchers.usedCount} + 1` }).where(eq(vouchers.id, voucher.id))
+    }
+    for (const row of orderItemRows) {
+      const updated = await tx.update(products).set({ stock: sql`${products.stock} - ${row.quantity}` }).where(and(eq(products.id, row.productId), sql`${products.stock} >= ${row.quantity}`)).returning({ id: products.id })
+      if (updated.length === 0) throw new AppError(`Stock insuffisant pour « ${row.productName} »`, 409)
+    }
+    return { order, orderItemRows, total, currency, discount, deliveryFee, loyaltyUsed: loyaltyQualified }
+  })
 
-  const order = inserted[0]
-  await db.insert(orderItems).values(
-    orderItemRows.map((r) => ({ ...r, orderId: order.id }))
+  const { order, orderItemRows, total, currency, discount, deliveryFee, loyaltyUsed } = result
+
+  const message = buildOrderMessage(
+    orderNumber,
+    customerName,
+    orderItemRows.map((item) => ({
+      productId: item.productId,
+      name: item.productName,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+    })),
+    total,
+    currency,
+    deliveryFee,
+    deliveryRequested,
+    deliveryAddress.trim(),
   )
-
-  // Record loyalty + voucher awards.
-  if (input.userId && loyaltyUsed) {
-    await recordLoyaltyEvent({
-      userId: input.userId,
-      type: 'first_orders',
-      points: loyalty.percent,
-      label: `Réduction de fidélité ${loyalty.percent}%`,
-      orderId: order.id,
-    })
-  }
-  if (input.userId && voucher) {
-    await redeemVoucher({
-      voucherId: voucher.id,
-      userId: input.userId,
-      orderId: order.id,
-      discount: voucherDiscount,
-    })
-  }
-
-  // Reserve stock at order time.
-  for (const row of orderItemRows) {
-    await db
-      .update(products)
-      .set({ stock: sql`${products.stock} - ${row.quantity}` })
-      .where(eq(products.id, row.productId))
-  }
-
-  const message = buildOrderMessage(orderNumber, customerName, items, total, currency, deliveryFee, deliveryRequested, deliveryAddress.trim())
   const whatsappNumber = await getWhatsappNumber()
   const whatsappUrl = buildWhatsappUrl(whatsappNumber, message)
 
