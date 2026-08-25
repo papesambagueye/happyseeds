@@ -13,6 +13,7 @@ import { eq } from 'drizzle-orm'
 export const dynamic = 'force-dynamic'
 
 const defaultHomeContent = {
+  bannerImage: '',
   heroImage: 'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?w=1200',
   heroEyebrow: 'TECH 221',
   heroTitle: "La tech qu'on aime, au bon prix.",
