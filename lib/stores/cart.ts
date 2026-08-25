@@ -112,12 +112,25 @@ if (typeof window !== 'undefined') {
     try {
       const token = getSessionToken() ?? 'anon'
       const key = `tec221_cart_${token}`
+      const anonymousKey = 'tec221_cart_anon'
       const raw = window.localStorage.getItem(key)
       const parsed = raw ? JSON.parse(raw) : null
       const store = useCart.getState()
       if (parsed && Array.isArray(parsed.state?.items)) {
         // Replace items with persisted value for the new token
         useCart.setState({ items: parsed.state.items })
+      } else if (token !== 'anon') {
+        const anonymousRaw = window.localStorage.getItem(anonymousKey)
+        const anonymousParsed = anonymousRaw ? JSON.parse(anonymousRaw) : null
+        const anonymousItems = anonymousParsed?.state?.items
+        if (Array.isArray(anonymousItems) && anonymousItems.length > 0) {
+          const persisted = JSON.stringify({ state: { items: anonymousItems }, version: 0 })
+          window.localStorage.setItem(key, persisted)
+          window.localStorage.removeItem(anonymousKey)
+          useCart.setState({ items: anonymousItems })
+        } else {
+          store.clear()
+        }
       } else {
         // No persisted cart for this token — clear.
         store.clear()

@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ImageUploadField } from '@/components/admin/image-upload-field'
 
 type HomeContent = {
+  bannerImage: string
   heroImage: string
   heroEyebrow: string
   heroTitle: string
@@ -28,7 +29,7 @@ type HomeContent = {
 }
 
 const defaultHomeContent: HomeContent = {
-  heroImage: '', heroEyebrow: 'TECH 221', heroTitle: "La tech qu'on aime, au bon prix.",
+  bannerImage: '', heroImage: '', heroEyebrow: 'TECH 221', heroTitle: "La tech qu'on aime, au bon prix.",
   heroDescription: 'Smartphones, audio, accessoires et gadgets premium conçus pour faciliter votre quotidien.',
   heroButton: 'Découvrir la boutique', promoButton: 'Voir les promos',
   benefits: [
@@ -105,6 +106,11 @@ export default function AdminSettings() {
               <Label htmlFor="whatsapp">Numéro WhatsApp</Label>
               <Input id="whatsapp" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="2376XXXXXXXX" />
             </div>
+          </Card>
+
+          <Card className="space-y-4 p-5">
+            <h2 className="font-semibold">Bannière au-dessus des avantages</h2>
+            <ImageUploadField label="Image de la bannière" value={homeContent.bannerImage || null} onChange={(value) => setHomeContent({ ...homeContent, bannerImage: value ?? '' })} />
           </Card>
 
           <Card className="space-y-4 p-5">

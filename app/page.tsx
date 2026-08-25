@@ -67,6 +67,11 @@ export default async function HomePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <StoreShell>
+        {content.bannerImage && (
+          <div className="relative aspect-[4/1] w-full overflow-hidden bg-black sm:aspect-[6/1]">
+            <Image src={content.bannerImage} alt="Bannière promotionnelle" fill className="object-cover" unoptimized priority />
+          </div>
+        )}
         <div className="border-b border-black bg-[#E30613] px-4 py-2 text-center text-xs font-bold uppercase tracking-[0.16em] text-white">
         Livraison rapide · offres exclusives · assistance WhatsApp
         </div>

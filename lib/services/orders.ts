@@ -106,7 +106,7 @@ export async function createOrder(input: OrderInput) {
       .where(inArray(products.id, productIds))
       .for('update')
     const priceMap = new Map<string, { id: string; name: string; price: number; stock: number; currency: string }>(
-      fresh.map((product) => [product.id, product]),
+      fresh.map((product: { id: string; name: string; price: number; stock: number; currency: string }) => [product.id, product]),
     )
     const flashPrices = await getFlashSalePriceMap()
     const promotionPrices = await getPromotionPriceMap()
@@ -165,7 +165,7 @@ export async function createOrder(input: OrderInput) {
       itemSummary: buildOrderMessage(
         orderNumber,
         customerName,
-        orderItemRows.map((item) => ({
+        orderItemRows.map((item: { productId: string; productName: string; quantity: number; unitPrice: number }) => ({
           productId: item.productId,
           name: item.productName,
           unitPrice: item.unitPrice,
@@ -200,7 +200,7 @@ export async function createOrder(input: OrderInput) {
   const message = buildOrderMessage(
     orderNumber,
     customerName,
-    orderItemRows.map((item) => ({
+    orderItemRows.map((item: { productId: string; productName: string; quantity: number; unitPrice: number }) => ({
       productId: item.productId,
       name: item.productName,
       unitPrice: item.unitPrice,
