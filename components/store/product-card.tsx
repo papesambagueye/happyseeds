@@ -97,11 +97,6 @@ export function ProductCard({ product }: { product: StoreProduct }) {
               Vente flash
             </span>
           )}
-          {product.isPromotion && !product.isFlashSale && (
-            <span className="absolute bottom-2 left-2 rounded-md bg-[#007BFF] px-2 py-1 text-xs font-bold text-white shadow-sm">
-              Promotion
-            </span>
-          )}
           {!out && (
             <span className="absolute right-2 top-2 rounded-md bg-white/95 px-2 py-1 text-xs font-semibold text-black shadow-sm">
               {t('in_stock')}
