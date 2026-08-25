@@ -19,11 +19,17 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<User[] | null>(null)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
     const res = await apiClient.get<User[]>(`/api/admin/users${query ? `?q=${encodeURIComponent(query)}` : ''}`)
-    if (res.success) setUsers(res.data)
+    if (res.success) {
+      setUsers(res.data)
+      setLoadError('')
+    } else {
+      setLoadError(res.error || 'Impossible de charger les utilisateurs.')
+    }
     setLoading(false)
   }, [query])
 
@@ -80,7 +86,7 @@ export default function AdminUsers() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Utilisateurs</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{loading ? 'Chargement…' : `${users?.length ?? 0} compte(s)`}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{loading ? 'Chargement…' : loadError ? 'Chargement impossible' : `${users?.length ?? 0} compte(s)`}</p>
         </div>
         <SearchInput value={query} onSearch={setQuery} placeholder="Rechercher (nom, e-mail)…" className="w-64 sm:w-80" />
       </div>
@@ -91,7 +97,10 @@ export default function AdminUsers() {
             <TableRow><TableHead>Utilisateur</TableHead><TableHead>E-mail</TableHead><TableHead>Rôle</TableHead><TableHead>Statut</TableHead><TableHead>Sanction</TableHead><TableHead>Commandes</TableHead><TableHead>Dépenses validées</TableHead><TableHead>Inscrit</TableHead><TableHead>Actions</TableHead></TableRow>
           </TableHeader>
           <TableBody>
-            {!users ? (
+            {loadError ? (
+              <TableRow><TableCell colSpan={9} className="py-10 text-center text-destructive">{loadError}</TableCell></TableRow>
+            ) :
+            !users ? (
               <TableRow><TableCell colSpan={9} className="py-10 text-center text-muted-foreground">…</TableCell></TableRow>
             ) : users.length === 0 ? (
               <TableRow><TableCell colSpan={9} className="py-10 text-center text-muted-foreground">{query ? 'Aucun utilisateur ne correspond à la recherche.' : 'Aucun utilisateur.'}</TableCell></TableRow>
