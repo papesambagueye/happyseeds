@@ -1,7 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { getSessionUserId } from '@/lib/auth/token-store'
+import { getSessionToken, getSessionUserId, setSessionUserId } from '@/lib/auth/token-store'
 
 export type CartItem = {
   productId: string
@@ -113,4 +113,19 @@ if (typeof window !== 'undefined') {
   window.addEventListener('storage', (event) => {
     if (event.key === 'tec221_user_id') useCart.persist.rehydrate()
   })
+
+  if (getSessionToken() && !getSessionUserId()) {
+    fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${getSessionToken()}` },
+      credentials: 'include',
+    })
+      .then((response) => response.ok ? response.json() : null)
+      .then((payload: { success?: boolean; data?: { id?: string } } | null) => {
+        const userId = payload?.success ? payload.data?.id : undefined
+        if (!userId) return
+        setSessionUserId(userId)
+        window.dispatchEvent(new CustomEvent('tec221:session'))
+      })
+      .catch(() => {})
+  }
 }
