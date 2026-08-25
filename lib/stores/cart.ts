@@ -1,6 +1,6 @@
 'use client'
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
 import { getSessionToken, getSessionUserId, setSessionUserId } from '@/lib/auth/token-store'
 
 export type CartItem = {
@@ -64,35 +64,20 @@ export const useCart = create<CartState>()(
     }),
     {
       name: 'tec221_cart',
-      storage: {
-        getItem: (name: string): string | null => {
-          try {
-            if (typeof window === 'undefined') return null
-            const userId = getSessionUserId() ?? 'anon'
-            return window.localStorage.getItem(`${name}_${userId}`)
-          } catch {
-            return null
-          }
+      storage: createJSONStorage(() => ({
+        getItem: (name) => {
+          const userId = getSessionUserId() ?? 'anon'
+          return window.localStorage.getItem(`${name}_${userId}`)
         },
-        setItem: (name: string, value: string): void => {
-          try {
-            if (typeof window === 'undefined') return
-            const userId = getSessionUserId() ?? 'anon'
-            window.localStorage.setItem(`${name}_${userId}`, value)
-          } catch {
-            // Ignore unavailable browser storage.
-          }
+        setItem: (name, value) => {
+          const userId = getSessionUserId() ?? 'anon'
+          window.localStorage.setItem(`${name}_${userId}`, value)
         },
-        removeItem: (name: string): void => {
-          try {
-            if (typeof window === 'undefined') return
-            const userId = getSessionUserId() ?? 'anon'
-            window.localStorage.removeItem(`${name}_${userId}`)
-          } catch {
-            // Ignore unavailable browser storage.
-          }
+        removeItem: (name) => {
+          const userId = getSessionUserId() ?? 'anon'
+          window.localStorage.removeItem(`${name}_${userId}`)
         },
-      } as any,
+      })),
     }
   )
 )
