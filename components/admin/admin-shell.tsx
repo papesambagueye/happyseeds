@@ -83,9 +83,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const nav = [...staffNav, ...(canAccessSettings ? superadminNav : [])]
 
   const logout = async () => {
-    await apiClient.post('/api/auth/logout', {})
-    setSessionToken(null)
-    router.push('/')
+    try {
+      await apiClient.post('/api/auth/logout', {})
+    } finally {
+      setSessionToken(null)
+      router.replace('/')
+      router.refresh()
+    }
   }
 
   return (

@@ -57,10 +57,14 @@ export function Header() {
   }
 
   const logout = async () => {
-    await apiClient.post('/api/auth/logout', {})
-    setSessionToken(null)
-    setMe(null)
-    router.refresh()
+    try {
+      await apiClient.post('/api/auth/logout', {})
+    } finally {
+      setSessionToken(null)
+      setMe(null)
+      router.replace('/')
+      router.refresh()
+    }
   }
 
   const adminHref = me?.role === 'superadmin' || me?.role === 'admin' ? '/admin' : null
