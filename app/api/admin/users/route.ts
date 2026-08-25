@@ -8,6 +8,7 @@ import { sessions, users } from '@/db/schemas/core'
 import { handleApiError } from '@/lib/api-error-response'
 import { AppError } from '@/lib/errors'
 import { requireStaff } from '@/lib/auth/admin-guard'
+import { hashPassword } from '@/lib/auth/password'
 
 const allowedRoles = new Set(['superadmin', 'admin', 'user'])
 
@@ -52,7 +53,19 @@ export async function PATCH(request: Request) {
     const id = url.searchParams.get('id')
     if (!id) throw new AppError('Identifiant utilisateur requis', 400)
 
-    const body = (await request.json().catch(() => ({}))) as { role?: string; sanction?: 'active' | 'suspended' | 'banned'; duration?: '3_days' | '1_month' | '3_months'; reason?: string }
+    const body = (await request.json().catch(() => ({}))) as { role?: string; sanction?: 'active' | 'suspended' | 'banned'; duration?: '3_days' | '1_month' | '3_months'; reason?: string; newPassword?: string }
+    if (body.newPassword !== undefined) {
+      const newPassword = body.newPassword
+      if (newPassword.length < 8) throw new AppError('Le nouveau mot de passe doit contenir au moins 8 caractères', 400)
+      const target = await db.select({ id: users.id, role: users.role }).from(users).where(eq(users.id, id)).limit(1)
+      if (!target[0]) throw new AppError('Utilisateur introuvable', 404)
+      if (target[0].role !== 'user') throw new AppError('Seul un compte client peut être réinitialisé ici', 403)
+      const updated = await db.transaction(async (tx: any) => {
+        await tx.delete(sessions).where(eq(sessions.userId, id))
+        return tx.update(users).set({ passwordHash: await hashPassword(newPassword), updatedAt: new Date() }).where(eq(users.id, id)).returning({ id: users.id })
+      })
+      return NextResponse.json({ success: true, data: updated[0] })
+    }
     if (body.sanction) {
       const current = await db.select({ id: users.id, role: users.role }).from(users).where(eq(users.id, id)).limit(1)
       if (!current[0]) throw new AppError('Utilisateur introuvable', 404)
@@ -96,6 +109,26 @@ export async function PATCH(request: Request) {
     }
 
     return NextResponse.json({ success: true, data: updated[0] })
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const actor = await requireStaff()
+    const id = new URL(request.url).searchParams.get('id')
+    if (!id) throw new AppError('Identifiant utilisateur requis', 400)
+    const target = await db.select({ id: users.id, role: users.role }).from(users).where(eq(users.id, id)).limit(1)
+    if (!target[0]) throw new AppError('Utilisateur introuvable', 404)
+    if (target[0].id === actor.id || target[0].role !== 'user') {
+      throw new AppError('Seul un compte client peut être supprimé', 403)
+    }
+    await db.transaction(async (tx: any) => {
+      await tx.delete(sessions).where(eq(sessions.userId, id))
+      await tx.delete(users).where(eq(users.id, id))
+    })
+    return NextResponse.json({ success: true, data: { id } })
   } catch (error) {
     return handleApiError(error)
   }

@@ -60,6 +60,21 @@ export default function AdminUsers() {
     if (res.success) { toast.success(sanction === 'banned' ? 'Compte banni' : 'Compte suspendu'); load() } else toast.error(res.error)
   }
 
+  const resetPassword = async (user: User) => {
+    const newPassword = window.prompt(`Nouveau mot de passe temporaire pour ${user.email} (8 caractères minimum)`) ?? ''
+    if (!newPassword) return
+    const res = await apiClient.patch(`/api/admin/users?id=${user.id}`, { newPassword })
+    if (res.success) toast.success('Mot de passe réinitialisé')
+    else toast.error(res.error)
+  }
+
+  const deleteUser = async (user: User) => {
+    if (!window.confirm(`Supprimer définitivement le compte de ${user.email} ? Cette action est irréversible.`)) return
+    const res = await apiClient.delete(`/api/admin/users?id=${user.id}`)
+    if (res.success) { toast.success('Compte supprimé'); load() }
+    else toast.error(res.error)
+  }
+
   return (
     <AdminShell>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -73,13 +88,13 @@ export default function AdminUsers() {
       <div className="mt-6 overflow-x-auto rounded-2xl border bg-card">
         <Table className="min-w-[1050px]">
           <TableHeader>
-            <TableRow><TableHead>Utilisateur</TableHead><TableHead>E-mail</TableHead><TableHead>Rôle</TableHead><TableHead>Statut</TableHead><TableHead>Sanction</TableHead><TableHead>Commandes</TableHead><TableHead>Dépenses validées</TableHead><TableHead>Inscrit</TableHead></TableRow>
+            <TableRow><TableHead>Utilisateur</TableHead><TableHead>E-mail</TableHead><TableHead>Rôle</TableHead><TableHead>Statut</TableHead><TableHead>Sanction</TableHead><TableHead>Commandes</TableHead><TableHead>Dépenses validées</TableHead><TableHead>Inscrit</TableHead><TableHead>Actions</TableHead></TableRow>
           </TableHeader>
           <TableBody>
             {!users ? (
-              <TableRow><TableCell colSpan={8} className="py-10 text-center text-muted-foreground">…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="py-10 text-center text-muted-foreground">…</TableCell></TableRow>
             ) : users.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="py-10 text-center text-muted-foreground">{query ? 'Aucun utilisateur ne correspond à la recherche.' : 'Aucun utilisateur.'}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="py-10 text-center text-muted-foreground">{query ? 'Aucun utilisateur ne correspond à la recherche.' : 'Aucun utilisateur.'}</TableCell></TableRow>
             ) : users.map((u) => (
               <TableRow key={u.id}>
                 <TableCell>{u.name ?? '—'}</TableCell>
@@ -119,6 +134,14 @@ export default function AdminUsers() {
                 </TableCell>
                 <TableCell className="font-medium text-emerald-700">{formatPrice(u.orderTotal, 'FCFA')}</TableCell>
                 <TableCell>{formatDate(u.createdAt)}</TableCell>
+                <TableCell>
+                  {u.role === 'user' ? (
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => resetPassword(u)} className="text-xs font-medium text-primary hover:underline">Récupérer</button>
+                      <button type="button" onClick={() => deleteUser(u)} className="text-xs font-medium text-destructive hover:underline">Supprimer</button>
+                    </div>
+                  ) : <span className="text-xs text-muted-foreground">Protégé</span>}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
