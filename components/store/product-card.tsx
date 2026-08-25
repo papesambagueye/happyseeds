@@ -126,7 +126,9 @@ export function ProductCard({ product }: { product: StoreProduct }) {
           <Button
             size="sm"
             disabled={out}
-            className="min-w-0 flex-1 whitespace-normal px-2 text-xs leading-tight sm:text-sm"
+            aria-label={t('add_to_cart')}
+            title={t('add_to_cart')}
+            className="h-8 min-w-8 flex-1 whitespace-nowrap px-0 text-xs leading-tight sm:h-8 sm:px-2 sm:text-sm"
             onClick={() => {
               if (out) return
               add({
@@ -141,8 +143,8 @@ export function ProductCard({ product }: { product: StoreProduct }) {
               toast.success(locale === 'fr' ? 'Ajouté au panier' : 'Added to cart')
             }}
           >
-            <ShoppingCart className="mr-1 h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-            <span className="text-center">{t('add_to_cart')}</span>
+            <ShoppingCart className="h-4 w-4 shrink-0" />
+            <span className="hidden text-center sm:inline">{t('add_to_cart')}</span>
           </Button>
           <button
             type="button"
