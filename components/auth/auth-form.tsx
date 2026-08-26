@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Store } from 'lucide-react'
+import { Eye, EyeOff, Store } from 'lucide-react'
 import { toast } from 'sonner'
 import { useI18n } from '@/lib/i18n'
 import { apiClient } from '@/lib/request'
@@ -24,6 +24,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const [birthDate, setBirthDate] = useState('')
   const [referralCode, setReferralCode] = useState(ref ?? '')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -89,7 +90,18 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="password">{t('login_password')}</Label>
-          <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} autoComplete={isLogin ? 'current-password' : 'new-password'} />
+          <div className="relative">
+            <Input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} autoComplete={isLogin ? 'current-password' : 'new-password'} className="pr-11" />
+            <button
+              type="button"
+              onClick={() => setShowPassword((visible) => !visible)}
+              className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              title={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
           {!isLogin && <p className="text-xs text-muted-foreground">8 caractères minimum.</p>}
         </div>
         <Button type="submit" className="w-full" disabled={loading}>
