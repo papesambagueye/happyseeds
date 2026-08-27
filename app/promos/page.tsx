@@ -3,6 +3,8 @@ import { StoreShell } from '@/components/store/shell'
 import { ProductCard } from '@/components/store/product-card'
 import { getPromotionalProducts } from '@/lib/services/catalog'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PromosPage() {
   let promotions: Awaited<ReturnType<typeof getPromotionalProducts>> = []
 
