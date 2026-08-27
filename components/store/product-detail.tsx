@@ -32,6 +32,7 @@ type Props = {
     image: string | null
     images: string[] | null
     slug: string
+    isFlashSale?: boolean
   }
   averageRating: number
   reviews: Review[]
@@ -76,9 +77,9 @@ export function ProductDetail({ product, averageRating, reviews, isLoggedIn }: P
       return
     }
     setPending(true)
-    const res = wishlisted
-      ? await apiClient.delete('/api/wishlist', { body: JSON.stringify({ productId: product.id }) })
-      : await apiClient.post('/api/wishlist', { productId: product.id })
+    const res = wishlisted 
+      ? await apiClient.delete('/api/wishlist', { body: JSON.stringify({ productId: product.id }) }) 
+      : await apiClient.post('/api/wishlist', { productId: product.id }) 
     setPending(false)
     if (res.success) {
       setWishlisted((v) => !v)
@@ -124,8 +125,8 @@ export function ProductDetail({ product, averageRating, reviews, isLoggedIn }: P
         </div>
 
         <div className="mt-3">
-          <Badge variant={out ? 'destructive' : 'secondary'}>
-            {out ? t('out_of_stock') : `${t('stock_label')} : ${product.stock}`}
+          <Badge variant={product.isFlashSale ? 'default' : out ? 'destructive' : 'secondary'}>
+            {product.isFlashSale ? 'Vente flash' : out ? t('out_of_stock') : `${t('stock_label')} : ${product.stock}`}
           </Badge>
         </div>
 

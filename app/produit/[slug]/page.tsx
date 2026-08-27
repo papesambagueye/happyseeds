@@ -10,10 +10,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params
   const productDetail = await getProductDetail(slug)
   const product = productDetail.product
+  const user = await getCurrentUser()
 
   if (!product) notFound()
-
-  const user = await getCurrentUser()
 
   return (
     <StoreShell>
@@ -37,6 +36,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             image: product.image,
             images: product.images ?? [],
             slug: product.slug,
+            isFlashSale: product.isFlashSale,
           }}
           averageRating={productDetail.averageRating}
           reviews={productDetail.reviews.map((review) => ({

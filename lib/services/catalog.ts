@@ -64,7 +64,7 @@ export async function getProductBySlug(slug: string) {
 }
 
 export type ProductWithCategory = {
-  product: (typeof products.$inferSelect) | null
+  product: ((typeof products.$inferSelect) & { isFlashSale: boolean }) | null
   category: (typeof categories.$inferSelect) | null
   reviews: (typeof reviews.$inferSelect)[]
   averageRating: number
