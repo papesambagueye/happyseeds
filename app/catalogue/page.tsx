@@ -18,8 +18,14 @@ export default async function CataloguePage({
       q: q || undefined,
       categoryId: category || undefined,
       sort: sort === 'price_asc' || sort === 'price_desc' ? sort : 'newest',
+    }).catch((error) => {
+      console.error('[CATALOGUE PRODUCTS ERROR]', error)
+      return []
     }),
-    getPublishedCategories(),
+    getPublishedCategories().catch((error) => {
+      console.error('[CATALOGUE CATEGORIES ERROR]', error)
+      return []
+    }),
   ])
 
   return (
