@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 import { handleApiError } from '@/lib/api-error-response'
 import { requireStaff } from '@/lib/auth/admin-guard'
 import { AppError } from '@/lib/errors'
-import { deleteFlashSale, listAdminFlashSales, upsertFlashSale } from '@/lib/services/admin_rewards'
+import { deleteFlashSale, listAdminFlashSales, updateFlashSaleProduct, upsertFlashSale } from '@/lib/services/admin_rewards'
 import { createProduct } from '@/lib/services/admincatalog'
 
 export async function GET() {
@@ -46,6 +46,15 @@ export async function POST(request: Request) {
       description: body.description?.trim(), price: Number(body.originalPrice ?? body.price ?? body.salePrice ?? 0),
       currency: 'FCFA', stock: 1, image: body.image ?? null, images: [], featured: 0, published: 1,
     })).id
+    if (body.id) {
+      await updateFlashSaleProduct({
+        productId,
+        name: body.productName,
+        description: body.description,
+        price: body.originalPrice == null ? undefined : Number(body.originalPrice),
+        image: body.image,
+      })
+    }
     const item = await upsertFlashSale({
       id: body.id,
       productId,

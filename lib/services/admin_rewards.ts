@@ -147,6 +147,21 @@ export async function upsertFlashSale(input: FlashSaleUpsert & { id?: string }) 
   return updated[0] ?? null
 }
 
+export async function updateFlashSaleProduct(input: {
+  productId: string
+  name?: string
+  description?: string | null
+  price?: number
+  image?: string | null
+}) {
+  const values: Partial<typeof products.$inferInsert> = {}
+  if (input.name?.trim()) values.name = input.name.trim()
+  if (input.description !== undefined) values.description = input.description?.trim() || null
+  if (input.price !== undefined && input.price > 0) values.price = input.price
+  if (input.image !== undefined) values.image = input.image
+  if (Object.keys(values).length > 0) await db.update(products).set(values).where(eq(products.id, input.productId))
+}
+
 export async function deleteFlashSale(id: string) {
   await db.delete(flashSales).where(eq(flashSales.id, id))
 }
