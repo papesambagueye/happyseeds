@@ -127,11 +127,17 @@ export async function awardPurchasePointsOnValidation(orderId: string) {
 
 /** Active flash-sales resolved to a productId -> salePrice map. */
 export async function getFlashSalePriceMap() {
-  const rows = await db
-    .select()
-    .from(flashSales)
-    .innerJoin(products, eq(flashSales.productId, products.id))
-    .where(and(eq(flashSales.active, 1), sql`${products.stock} > 0`, sql`${flashSales.salePrice} > 0`))
+  let rows: Array<{ flashSale: typeof flashSales.$inferSelect }> = []
+  try {
+    rows = await db
+      .select()
+      .from(flashSales)
+      .innerJoin(products, eq(flashSales.productId, products.id))
+      .where(and(eq(flashSales.active, 1), sql`${products.stock} > 0`, sql`${flashSales.salePrice} > 0`))
+  } catch (error) {
+    console.error('[FLASH SALES PRICE READ ERROR]', error)
+    return new Map<string, number>()
+  }
   const now = new Date()
   const map = new Map<string, number>()
   for (const { flashSale } of rows) {

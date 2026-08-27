@@ -22,7 +22,12 @@ export async function getActiveSlides() {
 export type StoreProduct = typeof products.$inferSelect & { isFlashSale: boolean; isPromotion: boolean }
 
 async function excludeFlashProducts(rows: Array<typeof products.$inferSelect>) {
-  const flashRows = (await db.select({ productId: flashSales.productId }).from(flashSales).where(eq(flashSales.active, 1))) as Array<{ productId: string }>
+  let flashRows: Array<{ productId: string }> = []
+  try {
+    flashRows = (await db.select({ productId: flashSales.productId }).from(flashSales).where(eq(flashSales.active, 1))) as Array<{ productId: string }>
+  } catch (error) {
+    console.error('[FLASH SALES READ ERROR]', error)
+  }
   const flashIds = new Set(flashRows.map((row: { productId: string }) => row.productId))
   return rows.filter((product) => !flashIds.has(product.id))
 }
