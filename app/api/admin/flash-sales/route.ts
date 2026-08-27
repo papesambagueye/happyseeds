@@ -36,6 +36,7 @@ export async function POST(request: Request) {
       endsAt?: string | null
     }
 
+    if (!body.id && body.productId) throw new AppError('Une vente flash doit créer un article indépendant du catalogue', 400)
     if (!body.productId && !body.productName?.trim()) throw new AppError('Nom du produit d’occasion requis', 400)
     if (body.startsAt && body.endsAt && new Date(body.endsAt) <= new Date(body.startsAt)) {
       throw new AppError('La fin doit être après le début', 400)
