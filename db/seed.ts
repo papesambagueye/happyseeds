@@ -2,13 +2,13 @@
  * Demo data seeder for TECH 221.
  * Run with: pnpm db:seed
  */
-import 'dotenv/config'
 import { config as loadEnv } from 'dotenv'
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import { categories, products, slides, storeConfig, siteMessages, vouchers, promotions } from './schemas/core'
 
+loadEnv({ path: '.env.local' })
 loadEnv()
 const DATABASE_URL = process.env.DATABASE_URL
 if (!DATABASE_URL) {
