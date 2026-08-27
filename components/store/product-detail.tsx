@@ -77,9 +77,9 @@ export function ProductDetail({ product, averageRating, reviews, isLoggedIn }: P
       return
     }
     setPending(true)
-    const res = wishlisted 
-      ? await apiClient.delete('/api/wishlist', { body: JSON.stringify({ productId: product.id }) }) 
-      : await apiClient.post('/api/wishlist', { productId: product.id }) 
+    const res = wishlisted
+      ? await apiClient.delete('/api/wishlist', { body: JSON.stringify({ productId: product.id }) })
+      : await apiClient.post('/api/wishlist', { productId: product.id })
     setPending(false)
     if (res.success) {
       setWishlisted((v) => !v)
