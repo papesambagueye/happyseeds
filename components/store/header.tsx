@@ -35,6 +35,7 @@ export function Header() {
   const [siteName, setSiteName] = useState<string | null>(null)
 
   useEffect(() => {
+    useCart.persist.rehydrate()
     apiClient.get<Me>('/api/auth/me').then((res) => {
       if (res.success) setMe(res.data)
       setLoaded(true)

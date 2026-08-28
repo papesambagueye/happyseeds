@@ -26,6 +26,10 @@ export default function CartPage() {
   const [loyaltyPercent, setLoyaltyPercent] = useState(0)
 
   useEffect(() => {
+    useCart.persist.rehydrate()
+  }, [])
+
+  useEffect(() => {
     apiClient.get<{ qualified: boolean; percent: number }>(`/api/rewards/loyalty?subtotal=${encodeURIComponent(subtotal)}`).then((res) => {
       if (res.success) setLoyaltyPercent(res.data.qualified ? res.data.percent : 0)
     })
@@ -103,7 +107,7 @@ export default function CartPage() {
                       <div className="flex items-center rounded-lg border">
                         <button onClick={() => setQuantity(item.productId, Math.max(1, item.quantity - 1))} className="cursor-pointer rounded px-2 py-1 transition hover:bg-muted hover:text-primary">−</button>
                         <span className="min-w-8 text-center">{item.quantity}</span>
-                        <button onClick={() => setQuantity(item.productId, item.quantity + 1)} className="cursor-pointer rounded px-2 py-1 transition hover:bg-muted hover:text-primary">+</button>
+                        <button onClick={() => setQuantity(item.productId, Math.min(item.stock || 99, item.quantity + 1))} disabled={item.quantity >= (item.stock || 99)} className="cursor-pointer rounded px-2 py-1 transition hover:bg-muted hover:text-primary disabled:cursor-not-allowed disabled:opacity-40">+</button>
                       </div>
                       <Button variant="outline" onClick={() => remove(item.productId)}>Supprimer</Button>
                     </div>

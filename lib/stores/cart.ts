@@ -64,6 +64,7 @@ export const useCart = create<CartState>()(
     }),
     {
       name: 'tec221_cart',
+      skipHydration: true,
       storage: createJSONStorage(() => ({
         getItem: (name) => {
           const userId = getSessionUserId() ?? 'anon'
