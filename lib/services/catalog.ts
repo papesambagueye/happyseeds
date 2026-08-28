@@ -124,11 +124,13 @@ export async function searchProducts(query: {
         ? desc(products.price)
         : desc(products.createdAt)
 
-  let rows = (await db
+  let productQuery = db
     .select()
     .from(products)
-    .where(and(...conditions))
-    .orderBy(orderBy)) as Array<typeof products.$inferSelect>
+  if (conditions.length > 0) {
+    productQuery = productQuery.where(and(...conditions)) as typeof productQuery
+  }
+  let rows = (await productQuery.orderBy(orderBy)) as Array<typeof products.$inferSelect>
 
   // Keep the storefront usable when existing admin products have not been published yet.
   if (rows.length === 0 && !query.q && !query.categoryId && query.min === undefined && query.max === undefined) {
