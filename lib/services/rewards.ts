@@ -127,10 +127,20 @@ export async function awardPurchasePointsOnValidation(orderId: string) {
 
 /** Active flash-sales resolved to a productId -> salePrice map. */
 export async function getFlashSalePriceMap() {
-  let rows: Array<{ flashSale: typeof flashSales.$inferSelect }> = []
+  let rows: Array<{
+    productId: string
+    salePrice: number
+    startsAt: Date | null
+    endsAt: Date | null
+  }> = []
   try {
     rows = await db
-      .select()
+      .select({
+        productId: flashSales.productId,
+        salePrice: flashSales.salePrice,
+        startsAt: flashSales.startsAt,
+        endsAt: flashSales.endsAt,
+      })
       .from(flashSales)
       .innerJoin(products, eq(flashSales.productId, products.id))
       .where(and(eq(flashSales.active, 1), sql`${products.stock} > 0`, sql`${flashSales.salePrice} > 0`))
@@ -140,10 +150,10 @@ export async function getFlashSalePriceMap() {
   }
   const now = new Date()
   const map = new Map<string, number>()
-  for (const { flashSale } of rows) {
-    if (flashSale.startsAt && flashSale.startsAt > now) continue
-    if (flashSale.endsAt && flashSale.endsAt < now) continue
-    map.set(flashSale.productId, flashSale.salePrice)
+  for (const row of rows) {
+    if (row.startsAt && row.startsAt > now) continue
+    if (row.endsAt && row.endsAt < now) continue
+    map.set(row.productId, row.salePrice)
   }
   return map
 }
