@@ -102,7 +102,7 @@ export async function searchProducts(query: {
   max?: number
   sort?: 'newest' | 'price_asc' | 'price_desc'
 }): Promise<StoreProduct[]> {
-  const conditions = [eq(products.published, 1)]
+  const conditions = []
   if (query.q) {
     conditions.push(
       or(
