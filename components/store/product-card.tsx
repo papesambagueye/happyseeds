@@ -49,7 +49,7 @@ export function ProductCard({ product }: { product: StoreProduct }) {
   const localName = pickLocal(locale, product.name, product.nameEn)
   const price = formatPrice(product.price, product.currency)
   const out = product.stock <= 0
-  const hasPromo = product.compareAtPrice != null && product.compareAtPrice > product.price
+  const hasPromo = product.isPromotion || (product.compareAtPrice != null && product.compareAtPrice > product.price)
 
   const toggleWishlist = async () => {
     if (!isLoggedIn) {
