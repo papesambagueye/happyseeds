@@ -21,17 +21,6 @@ export async function getActiveSlides() {
 
 export type StoreProduct = typeof products.$inferSelect & { isFlashSale: boolean; isPromotion: boolean }
 
-async function excludeFlashProducts(rows: Array<typeof products.$inferSelect>) {
-  let flashRows: Array<{ productId: string }> = []
-  try {
-    flashRows = (await db.select({ productId: flashSales.productId }).from(flashSales).where(eq(flashSales.active, 1))) as Array<{ productId: string }>
-  } catch (error) {
-    console.error('[FLASH SALES READ ERROR]', error)
-  }
-  const flashIds = new Set(flashRows.map((row: { productId: string }) => row.productId))
-  return rows.filter((product) => !flashIds.has(product.id))
-}
-
 async function attachPromotionPrices(rows: Array<typeof products.$inferSelect>) {
   const promotionPrices = await getPromotionPriceMap()
   return rows.map((product) => {
@@ -50,7 +39,7 @@ export async function getPublishedProducts(limit?: number): Promise<StoreProduct
     .where(eq(products.published, 1))
     .orderBy(desc(products.createdAt))
   const rows = (limit ? (await base).slice(0, limit) : await base) as Array<typeof products.$inferSelect>
-  return (await attachFlashPrices(await attachPromotionPrices(await excludeFlashProducts(rows)))) as StoreProduct[]
+  return (await attachFlashPrices(await attachPromotionPrices(rows))) as StoreProduct[]
 }
 
 export async function getFeaturedProducts(limit = 6): Promise<StoreProduct[]> {
@@ -60,7 +49,7 @@ export async function getFeaturedProducts(limit = 6): Promise<StoreProduct[]> {
     .where(sql`${products.featured} = 1 AND ${products.published} = 1`)
     .orderBy(desc(products.createdAt))
     .limit(limit)) as Array<typeof products.$inferSelect>
-  return (await attachFlashPrices(await attachPromotionPrices(await excludeFlashProducts(rows)))) as StoreProduct[]
+  return (await attachFlashPrices(await attachPromotionPrices(rows))) as StoreProduct[]
 }
 
 export async function getProductBySlug(slug: string) {
@@ -141,7 +130,7 @@ export async function searchProducts(query: {
     .where(and(...conditions))
     .orderBy(orderBy)) as Array<typeof products.$inferSelect>
 
-  return (await attachFlashPrices(await attachPromotionPrices(await excludeFlashProducts(rows)))) as StoreProduct[]
+  return (await attachFlashPrices(await attachPromotionPrices(rows))) as StoreProduct[]
 }
 
 /** Active flash-sale products with sale price, for a "vente flash" page. */
