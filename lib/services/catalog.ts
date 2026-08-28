@@ -124,11 +124,19 @@ export async function searchProducts(query: {
         ? desc(products.price)
         : desc(products.createdAt)
 
-  const rows = (await db
+  let rows = (await db
     .select()
     .from(products)
     .where(and(...conditions))
     .orderBy(orderBy)) as Array<typeof products.$inferSelect>
+
+  // Keep the storefront usable when existing admin products have not been published yet.
+  if (rows.length === 0 && !query.q && !query.categoryId && query.min === undefined && query.max === undefined) {
+    rows = (await db
+      .select()
+      .from(products)
+      .orderBy(orderBy)) as Array<typeof products.$inferSelect>
+  }
 
   return (await attachFlashPrices(await attachPromotionPrices(rows))) as StoreProduct[]
 }
