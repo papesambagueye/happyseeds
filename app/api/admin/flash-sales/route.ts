@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
     const productId = body.productId ?? (await createProduct({
       name: body.productName!.trim(), nameEn: body.productName!.trim(),
-      description: body.description?.trim(), price: Number(body.originalPrice ?? body.price ?? body.salePrice ?? 0),
+      description: body.description?.trim(), price: Number(body.salePrice ?? body.originalPrice ?? body.price ?? 0),
       currency: 'FCFA', stock: 1, image: body.image ?? null, images: [], featured: 0, published: 1,
     })).id
     if (body.id) {

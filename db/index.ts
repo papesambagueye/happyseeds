@@ -3,33 +3,26 @@ import { cache } from 'react'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
-function emptyThenable<T>(value: T) {
-  return Promise.resolve(value)
-}
-
-function emptyQueryBuilder() {
-  const resolved = () => emptyThenable([])
-  const builder: Record<string, any> = {
-    from: () => builder,
-    where: () => builder,
-    orderBy: () => resolved(),
-    limit: () => resolved(),
-    innerJoin: () => builder,
-    leftJoin: () => builder,
-    values: () => emptyThenable(undefined),
-    then: (onFulfilled?: any, onRejected?: any) => resolved().then(onFulfilled, onRejected),
-    catch: (onRejected?: any) => resolved().catch(onRejected),
-    finally: (onFinally?: any) => resolved().finally(onFinally),
-  }
-  return builder
-}
-
 function emptyDb() {
+  const fail = () => {
+    throw new Error('La base de données est indisponible. Veuillez réessayer plus tard.')
+  }
   const api: Record<string, any> = {
-    select: () => emptyQueryBuilder(),
-    insert: () => ({ values: () => emptyThenable(undefined) }),
-    update: () => ({ set: () => ({ where: () => emptyThenable(undefined) }) }),
-    delete: () => ({ where: () => emptyThenable(undefined) }),
+    select: () => ({
+      from: fail,
+      where: fail,
+      orderBy: fail,
+      limit: fail,
+      innerJoin: fail,
+      leftJoin: fail,
+      values: fail,
+      then: fail,
+      catch: fail,
+      finally: fail,
+    }),
+    insert: () => ({ values: fail }),
+    update: () => ({ set: () => ({ where: fail }) }),
+    delete: () => ({ where: fail }),
   }
   return api
 }

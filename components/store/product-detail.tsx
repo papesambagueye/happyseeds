@@ -69,7 +69,7 @@ export function ProductDetail({ product, averageRating, reviews, isLoggedIn }: P
   const name = pickLocal(locale, product.name, product.nameEn)
   const desc = pickLocal(locale, product.description, product.descriptionEn)
   const out = product.stock <= 0
-  const hasPromo = product.compareAtPrice != null && product.compareAtPrice > product.price
+  const hasPromo = !product.isFlashSale && product.compareAtPrice != null && product.compareAtPrice > product.price
 
   const toggleWishlist = async () => {
     if (!isLoggedIn) {

@@ -5,6 +5,7 @@ import { StoreShell } from '@/components/store/shell'
 import { Button } from '@/components/ui/button'
 import { HeroCarousel } from '@/components/store/hero-carousel'
 import { ProductCard } from '@/components/store/product-card'
+import { StorefrontStatus } from '@/components/store/storefront-status'
 import { getActiveSlides, getFeaturedProducts, getPublishedCategories } from '@/lib/services/catalog'
 import { db } from '@/db'
 import { storeConfig } from '@/db/schemas/core'
@@ -48,12 +49,31 @@ async function getHomeContent() {
 }
 
 export default async function HomePage() {
-  const [slides, featuredProducts, content, publishedCategories] = await Promise.all([
-    getActiveSlides().catch(() => []),
-    getFeaturedProducts().catch(() => []),
-    getHomeContent().catch(() => defaultHomeContent),
-    getPublishedCategories().catch(() => []),
-  ])
+  let slides: Awaited<ReturnType<typeof getActiveSlides>> = []
+  let featuredProducts: Awaited<ReturnType<typeof getFeaturedProducts>> = []
+  let publishedCategories: Awaited<ReturnType<typeof getPublishedCategories>> = []
+  let content = defaultHomeContent
+
+  try {
+    ;[slides, featuredProducts, content, publishedCategories] = await Promise.all([
+      getActiveSlides(),
+      getFeaturedProducts(),
+      getHomeContent(),
+      getPublishedCategories(),
+    ])
+  } catch (error) {
+    console.error('[HOME DATA ERROR]', error)
+    return (
+      <StoreShell>
+        <div className="mx-auto max-w-7xl px-4 py-16">
+          <StorefrontStatus
+            title="La boutique est temporairement indisponible"
+            message="La base de données est inaccessible. Merci de réessayer dans quelques instants."
+          />
+        </div>
+      </StoreShell>
+    )
+  }
 
   const structuredData = {
     '@context': 'https://schema.org',

@@ -115,8 +115,8 @@ export async function upsertFlashSale(input: FlashSaleUpsert & { id?: string }) 
   const productRows = await db.select({ price: products.price, stock: products.stock }).from(products).where(eq(products.id, input.productId)).limit(1)
   if (productRows.length === 0) throw new AppError('Produit introuvable', 404)
   if (productRows[0].stock !== 1) throw new AppError('Une vente flash doit concerner un article unique avec un stock de 1', 400)
-  if (input.salePrice <= 0 || input.salePrice >= productRows[0].price) {
-    throw new AppError('Le prix flash doit être inférieur au prix normal et supérieur à zéro', 400)
+  if (input.salePrice <= 0) {
+    throw new AppError('Le prix de vente doit être supérieur à zéro', 400)
   }
   if (!input.id) {
     const inserted = await db

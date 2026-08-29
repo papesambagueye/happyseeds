@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { StoreShell } from '@/components/store/shell'
 import { ProductCard } from '@/components/store/product-card'
+import { StorefrontStatus } from '@/components/store/storefront-status'
 import { getPublishedCategories, searchProducts } from '@/lib/services/catalog'
 
 export default async function CataloguePage({
@@ -13,20 +14,31 @@ export default async function CataloguePage({
   const category = typeof params.category === 'string' ? params.category : ''
   const sort = typeof params.sort === 'string' ? params.sort : 'newest'
 
-  const [products, categories] = await Promise.all([
-    searchProducts({
-      q: q || undefined,
-      categoryId: category || undefined,
-      sort: sort === 'price_asc' || sort === 'price_desc' ? sort : 'newest',
-    }).catch((error) => {
-      console.error('[CATALOGUE PRODUCTS ERROR]', error)
-      return []
-    }),
-    getPublishedCategories().catch((error) => {
-      console.error('[CATALOGUE CATEGORIES ERROR]', error)
-      return []
-    }),
-  ])
+  let products: Awaited<ReturnType<typeof searchProducts>> = []
+  let categories: Awaited<ReturnType<typeof getPublishedCategories>> = []
+
+  try {
+    ;[products, categories] = await Promise.all([
+      searchProducts({
+        q: q || undefined,
+        categoryId: category || undefined,
+        sort: sort === 'price_asc' || sort === 'price_desc' ? sort : 'newest',
+      }),
+      getPublishedCategories(),
+    ])
+  } catch (error) {
+    console.error('[CATALOGUE DATA ERROR]', error)
+    return (
+      <StoreShell>
+        <div className="mx-auto max-w-7xl px-4 py-16">
+          <StorefrontStatus
+            title="La boutique est temporairement indisponible"
+            message="La base de données est inaccessible. Veuillez réessayer dans quelques instants."
+          />
+        </div>
+      </StoreShell>
+    )
+  }
 
   return (
     <StoreShell>

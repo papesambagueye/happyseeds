@@ -2,6 +2,7 @@ import 'server-only'
 import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { categories, flashSales, products, promotions, slides, reviews } from '@/db/schemas/core'
+import { filterCatalogRowsForStorefront } from './catalog-storefront'
 import { attachFlashPrices, getPromotionPriceMap } from './rewards'
 
 export async function getPublishedCategories(): Promise<Array<typeof categories.$inferSelect>> {
@@ -21,6 +22,14 @@ export async function getActiveSlides() {
 
 export type StoreProduct = typeof products.$inferSelect & { isFlashSale: boolean; isPromotion: boolean }
 
+async function getHiddenCatalogProductIds() {
+  const rows = await db
+    .select({ productId: flashSales.productId })
+    .from(flashSales)
+    .where(sql`${flashSales.active} = 1`)
+  return new Set<string>(rows.map((row: { productId: string }) => row.productId))
+}
+
 async function attachPromotionPrices(rows: Array<typeof products.$inferSelect>) {
   const promotionPrices = await getPromotionPriceMap()
   return rows.map((product) => {
@@ -39,7 +48,8 @@ export async function getPublishedProducts(limit?: number): Promise<StoreProduct
     .where(eq(products.published, 1))
     .orderBy(desc(products.createdAt))
   const rows = (limit ? (await base).slice(0, limit) : await base) as Array<typeof products.$inferSelect>
-  return (await attachFlashPrices(await attachPromotionPrices(rows))) as StoreProduct[]
+  const hiddenIds = await getHiddenCatalogProductIds()
+  return (await attachFlashPrices(await attachPromotionPrices(filterCatalogRowsForStorefront(rows, hiddenIds)))) as StoreProduct[]
 }
 
 export async function getFeaturedProducts(limit = 6): Promise<StoreProduct[]> {
@@ -49,7 +59,8 @@ export async function getFeaturedProducts(limit = 6): Promise<StoreProduct[]> {
     .where(sql`${products.featured} = 1 AND ${products.published} = 1`)
     .orderBy(desc(products.createdAt))
     .limit(limit)) as Array<typeof products.$inferSelect>
-  return (await attachFlashPrices(await attachPromotionPrices(rows))) as StoreProduct[]
+  const hiddenIds = await getHiddenCatalogProductIds()
+  return (await attachFlashPrices(await attachPromotionPrices(filterCatalogRowsForStorefront(rows, hiddenIds)))) as StoreProduct[]
 }
 
 export async function getProductBySlug(slug: string) {
@@ -140,7 +151,8 @@ export async function searchProducts(query: {
       .orderBy(orderBy)) as Array<typeof products.$inferSelect>
   }
 
-  return (await attachFlashPrices(await attachPromotionPrices(rows))) as StoreProduct[]
+  const hiddenIds = await getHiddenCatalogProductIds()
+  return (await attachFlashPrices(await attachPromotionPrices(filterCatalogRowsForStorefront(rows, hiddenIds)))) as StoreProduct[]
 }
 
 /** Active flash-sale products with sale price, for a "vente flash" page. */
@@ -193,7 +205,12 @@ export async function getPromotionalProducts(): Promise<StoreProduct[]> {
     }>
   const now = new Date()
   return rows
-    .filter(({ promotion }) => (!promotion.startsAt || promotion.startsAt <= now) && (!promotion.endsAt || promotion.endsAt >= now))
+    .filter(({ product, promotion }) => (
+      promotion.promotionalPrice > 0 &&
+      promotion.promotionalPrice < product.price &&
+      (!promotion.startsAt || promotion.startsAt <= now) &&
+      (!promotion.endsAt || promotion.endsAt >= now)
+    ))
     .map(({ product, promotion }) => ({
       ...product,
       price: Math.min(promotion.promotionalPrice, product.price),

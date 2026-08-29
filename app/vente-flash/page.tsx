@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { StoreShell } from '@/components/store/shell'
 import { ProductCard } from '@/components/store/product-card'
+import { StorefrontStatus } from '@/components/store/storefront-status'
 import { getFlashSaleProducts } from '@/lib/services/catalog'
 
 export const dynamic = 'force-dynamic'
@@ -9,8 +10,18 @@ export default async function FlashSalesPage() {
   let sales: Awaited<ReturnType<typeof getFlashSaleProducts>> = []
   try {
     sales = await getFlashSaleProducts()
-  } catch {
-    sales = []
+  } catch (error) {
+    console.error('[FLASH SALES DATA ERROR]', error)
+    return (
+      <StoreShell>
+        <div className="mx-auto max-w-7xl px-4 py-16">
+          <StorefrontStatus
+            title="La vente flash est momentanément indisponible"
+            message="La base de données est inaccessible. Merci de réessayer plus tard."
+          />
+        </div>
+      </StoreShell>
+    )
   }
 
   return (

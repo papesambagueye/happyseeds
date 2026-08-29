@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { StoreShell } from '@/components/store/shell'
 import { ProductCard } from '@/components/store/product-card'
+import { StorefrontStatus } from '@/components/store/storefront-status'
 import { getPromotionalProducts } from '@/lib/services/catalog'
 
 export const dynamic = 'force-dynamic'
@@ -10,8 +11,18 @@ export default async function PromosPage() {
 
   try {
     promotions = await getPromotionalProducts()
-  } catch {
-    promotions = []
+  } catch (error) {
+    console.error('[PROMOS DATA ERROR]', error)
+    return (
+      <StoreShell>
+        <div className="mx-auto max-w-7xl px-4 py-16">
+          <StorefrontStatus
+            title="La boutique est momentanément indisponible"
+            message="La base de données est inaccessible. Merci de réessayer plus tard."
+          />
+        </div>
+      </StoreShell>
+    )
   }
 
   return (
