@@ -30,9 +30,12 @@ async function getHiddenCatalogProductIds() {
   return new Set<string>(rows.map((row: { productId: string }) => row.productId))
 }
 
-async function attachPromotionPrices(rows: Array<typeof products.$inferSelect>) {
+async function attachPromotionPrices(rows: Array<typeof products.$inferSelect>, hiddenProductIds?: Set<string>) {
   const promotionPrices = await getPromotionPriceMap()
   return rows.map((product) => {
+    if (hiddenProductIds?.has(product.id)) {
+      return { ...product, isPromotion: false }
+    }
     const promotionalPrice = promotionPrices.get(product.id)
     if (promotionalPrice != null && promotionalPrice < product.price) {
       return { ...product, price: promotionalPrice, compareAtPrice: product.price, isPromotion: true }
@@ -49,7 +52,8 @@ export async function getPublishedProducts(limit?: number): Promise<StoreProduct
     .orderBy(desc(products.createdAt))
   const rows = (limit ? (await base).slice(0, limit) : await base) as Array<typeof products.$inferSelect>
   const hiddenIds = await getHiddenCatalogProductIds()
-  return (await attachFlashPrices(await attachPromotionPrices(filterCatalogRowsForStorefront(rows, hiddenIds)))) as StoreProduct[]
+  const visibleRows = filterCatalogRowsForStorefront(rows, hiddenIds)
+  return (await attachFlashPrices(await attachPromotionPrices(visibleRows, hiddenIds))) as StoreProduct[]
 }
 
 export async function getFeaturedProducts(limit = 6): Promise<StoreProduct[]> {
@@ -60,7 +64,8 @@ export async function getFeaturedProducts(limit = 6): Promise<StoreProduct[]> {
     .orderBy(desc(products.createdAt))
     .limit(limit)) as Array<typeof products.$inferSelect>
   const hiddenIds = await getHiddenCatalogProductIds()
-  return (await attachFlashPrices(await attachPromotionPrices(filterCatalogRowsForStorefront(rows, hiddenIds)))) as StoreProduct[]
+  const visibleRows = filterCatalogRowsForStorefront(rows, hiddenIds)
+  return (await attachFlashPrices(await attachPromotionPrices(visibleRows, hiddenIds))) as StoreProduct[]
 }
 
 export async function getProductBySlug(slug: string) {
@@ -97,7 +102,8 @@ export async function getProductDetail(slug: string): Promise<ProductWithCategor
     ? reviewsList.reduce((sum: number, review: (typeof reviews.$inferSelect)) => sum + review.rating, 0) / reviewsList.length
     : 0
 
-  const withFlash = await attachFlashPrices(await attachPromotionPrices([product]))
+  const hiddenIds = await getHiddenCatalogProductIds()
+  const withFlash = await attachFlashPrices(await attachPromotionPrices([product], hiddenIds))
   return {
     product: withFlash[0],
     category,
@@ -152,7 +158,8 @@ export async function searchProducts(query: {
   }
 
   const hiddenIds = await getHiddenCatalogProductIds()
-  return (await attachFlashPrices(await attachPromotionPrices(filterCatalogRowsForStorefront(rows, hiddenIds)))) as StoreProduct[]
+  const visibleRows = filterCatalogRowsForStorefront(rows, hiddenIds)
+  return (await attachFlashPrices(await attachPromotionPrices(visibleRows, hiddenIds))) as StoreProduct[]
 }
 
 /** Active flash-sale products with sale price, for a "vente flash" page. */
@@ -204,8 +211,10 @@ export async function getPromotionalProducts(): Promise<StoreProduct[]> {
       promotion: typeof promotions.$inferSelect
     }>
   const now = new Date()
+  const hiddenIds = await getHiddenCatalogProductIds()
   return rows
     .filter(({ product, promotion }) => (
+      !hiddenIds.has(product.id) &&
       promotion.promotionalPrice > 0 &&
       promotion.promotionalPrice < product.price &&
       (!promotion.startsAt || promotion.startsAt <= now) &&
