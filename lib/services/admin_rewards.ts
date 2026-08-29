@@ -3,6 +3,7 @@ import { desc, eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { flashSales, products, promotions, vouchers } from '@/db/schemas/core'
 import { AppError } from '@/lib/errors'
+import { validatePromotionPrice } from './promo-rules'
 
 export type VoucherUpsert = {
   code: string
@@ -186,14 +187,9 @@ export async function listAdminPromotions() {
 }
 
 export async function upsertPromotion(input: PromotionUpsert & { id?: string }) {
-  if (!Number.isInteger(input.promotionalPrice) || input.promotionalPrice <= 0) {
-    throw new AppError('Le nouveau prix doit être un montant FCFA positif', 400)
-  }
   const productRows = await db.select({ price: products.price }).from(products).where(eq(products.id, input.productId)).limit(1)
   if (productRows.length === 0) throw new AppError('Produit introuvable', 404)
-  if (input.promotionalPrice >= productRows[0].price) {
-    throw new AppError('Le prix promotionnel doit être inférieur au prix actuel', 400)
-  }
+  validatePromotionPrice(productRows[0].price, input.promotionalPrice)
   const values = {
     productId: input.productId,
     promotionalPrice: input.promotionalPrice,

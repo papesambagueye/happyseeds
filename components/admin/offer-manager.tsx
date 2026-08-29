@@ -81,6 +81,13 @@ export function OfferManager({ kind }: { kind: 'promotion' | 'flash' }) {
     if (!isPromotion && !editing && !flashForm.productName.trim()) { toast.error('Saisissez le nom du produit'); return }
     const currentForm = isPromotion ? form : flashForm
     if (currentForm.startsAt && currentForm.endsAt && new Date(currentForm.endsAt) <= new Date(currentForm.startsAt)) { toast.error('La fin doit être après le début'); return }
+    if (isPromotion) {
+      const selectedProduct = products.find((product) => product.id === form.productId)
+      const promoPrice = Number(form.price)
+      if (!selectedProduct) { toast.error('Choisissez un produit valide'); return }
+      if (!Number.isInteger(promoPrice) || promoPrice <= 0) { toast.error('Le prix promo doit être un montant FCFA positif'); return }
+      if (promoPrice >= selectedProduct.price) { toast.error('Le prix promotionnel doit être inférieur au prix actuel'); return }
+    }
     setSaving(true)
     const payload = isPromotion
       ? { id: editing ?? undefined, productId: form.productId, promotionalPrice: Number(form.price), active: form.active ? 1 : 0, startsAt: form.startsAt || null, endsAt: form.endsAt || null }
