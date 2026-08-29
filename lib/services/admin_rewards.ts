@@ -164,7 +164,17 @@ export async function updateFlashSaleProduct(input: {
 }
 
 export async function deleteFlashSale(id: string) {
-  await db.delete(flashSales).where(eq(flashSales.id, id))
+  const rows = await db
+    .select({ productId: flashSales.productId })
+    .from(flashSales)
+    .where(eq(flashSales.id, id))
+    .limit(1)
+
+  if (rows.length === 0) return
+
+  // Le produit créé pour une vente flash est l’item réel du catalogue.
+  // En supprimant le produit, la FK cascade retire aussi la ligne flash_sales.
+  await db.delete(products).where(eq(products.id, rows[0].productId))
 }
 
 export async function listAdminPromotions() {
