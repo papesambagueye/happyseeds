@@ -6,9 +6,13 @@ import { handleApiError } from '@/lib/api-error-response'
 import { getCurrentUser } from '@/lib/auth/session'
 import { createReview } from '@/lib/services/reviews'
 import { AppError } from '@/lib/errors'
+import { consumeRateLimit, getClientIp } from '@/lib/auth/rate-limit'
 
 export async function POST(request: Request) {
   try {
+    if (!consumeRateLimit(`review:${getClientIp(request)}`, { limit: 10, windowMs: 15 * 60 * 1000 }).allowed) {
+      return NextResponse.json({ success: false, error: 'Trop de demandes. Réessayez plus tard.' }, { status: 429 })
+    }
     const user = await getCurrentUser()
     if (!user) throw new AppError('Connectez-vous pour publier un avis.', 401)
     const body = (await request.json().catch(() => ({}))) as { productId?: string; rating?: number; comment?: string }

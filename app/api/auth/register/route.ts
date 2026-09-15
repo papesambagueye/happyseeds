@@ -11,9 +11,14 @@ import { hashPassword } from '@/lib/auth/password'
 import { createSession } from '@/lib/auth/session'
 import { attachReferral, awardReferralSignupMilestones, getReferrerByCode } from '@/lib/services/referrals'
 import { awardSignupBonus } from '@/lib/services/rewards'
+import { consumeRateLimit, getClientIp } from '@/lib/auth/rate-limit'
 
 export async function POST(request: Request) {
   try {
+    const rateLimit = consumeRateLimit(`register:${getClientIp(request)}`, { limit: 5, windowMs: 15 * 60 * 1000 })
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ success: false, error: 'Trop de tentatives. Réessayez dans quelques minutes.' }, { status: 429 })
+    }
     const body = await request.json().catch(() => ({})) as {
       email?: string
       password?: string
@@ -60,24 +65,27 @@ export async function POST(request: Request) {
       throw new ValidationError('Un compte existe déjà pour cette adresse e-mail.')
     }
 
-    const superadminCountRow = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(users)
-      .where(eq(users.role, 'superadmin'))
-      .limit(1)
-
-    const superadminCount = Number(superadminCountRow[0]?.count ?? 0)
-    const shouldBeSuperadmin = superadminCount === 0
     const referrerId = body.ref ? await getReferrerByCode(body.ref) : null
 
-    const inserted = await db.insert(users).values({
-      email,
-      name,
-      passwordHash: await hashPassword(password),
-      birthDate,
-      role: shouldBeSuperadmin ? 'superadmin' : 'user',
-      status: 'active',
-    }).returning({ id: users.id })
+    const passwordHash = await hashPassword(password)
+    const inserted = await db.transaction(async (tx: any) => {
+      await tx.execute(sql`select pg_advisory_xact_lock(221221)`)
+      const superadminCountRow = await tx
+        .select({ count: sql<number>`count(*)` })
+        .from(users)
+        .where(eq(users.role, 'superadmin'))
+        .limit(1)
+      const shouldBeSuperadmin = Number(superadminCountRow[0]?.count ?? 0) === 0
+
+      return tx.insert(users).values({
+        email,
+        name,
+        passwordHash,
+        birthDate,
+        role: shouldBeSuperadmin ? 'superadmin' : 'user',
+        status: 'active',
+      }).returning({ id: users.id })
+    })
     if (referrerId && inserted[0]) await attachReferral(inserted[0].id, referrerId)
     if (referrerId) await awardReferralSignupMilestones(referrerId)
     if (inserted[0]) await awardSignupBonus(inserted[0].id)

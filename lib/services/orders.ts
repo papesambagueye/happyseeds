@@ -152,6 +152,16 @@ export async function createOrder(input: OrderInput) {
     let voucherDiscount = 0
     if (voucherCode && input.userId) {
       const { voucher: v, discount: d } = await validateVoucher(voucherCode, subtotal - loyaltyDiscount)
+      const lockedVoucherRows = await tx
+        .select()
+        .from(vouchers)
+        .where(eq(vouchers.id, v.id))
+        .for('update')
+        .limit(1)
+      const lockedVoucher = lockedVoucherRows[0]
+      if (!lockedVoucher || lockedVoucher.active !== 1 || (lockedVoucher.maxUses !== -1 && lockedVoucher.usedCount >= lockedVoucher.maxUses)) {
+        throw new AppError('Ce code promo a atteint son nombre maximal d’utilisations', 400)
+      }
       const alreadyUsed = await tx.select({ id: voucherRedemptions.id }).from(voucherRedemptions).where(and(eq(voucherRedemptions.userId, input.userId), eq(voucherRedemptions.voucherId, v.id))).limit(1)
       if (alreadyUsed.length > 0) throw new AppError('Vous avez déjà utilisé ce code promo', 400)
       voucher = { id: v.id, code: v.code, title: v.title }

@@ -23,6 +23,11 @@ self.addEventListener('fetch', (event) => {
   if (new URL(request.url).pathname.startsWith('/api/')) return
 
   if (request.mode === 'navigate') {
+    const pathname = new URL(request.url).pathname
+    if (pathname.startsWith('/admin') || pathname.startsWith('/compte') || pathname.startsWith('/commandes') || pathname.startsWith('/favoris') || pathname.startsWith('/parrainage') || pathname.startsWith('/suivi')) {
+      event.respondWith(fetch(request))
+      return
+    }
     event.respondWith(
       fetch(request)
         .then((response) => {

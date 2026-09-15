@@ -9,13 +9,11 @@ import { handleApiError } from '@/lib/api-error-response'
 import { ValidationError } from '@/lib/errors'
 import { verifyPassword } from '@/lib/auth/password'
 import { createSession } from '@/lib/auth/session'
-import { consumeRateLimit } from '@/lib/auth/rate-limit'
+import { consumeRateLimit, getClientIp } from '@/lib/auth/rate-limit'
 
 export async function POST(request: Request) {
   try {
-    const forwardedFor = request.headers.get('x-forwarded-for') ?? ''
-    const realIp = request.headers.get('x-real-ip') ?? ''
-    const clientIp = (forwardedFor.split(',')[0] || realIp || 'unknown').trim()
+    const clientIp = getClientIp(request)
 
     const body = await request.json().catch(() => ({})) as {
       email?: string

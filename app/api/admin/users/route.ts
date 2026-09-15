@@ -93,6 +93,10 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: true, data: updated[0] })
     }
 
+    if (body.role === 'superadmin' || actor.role !== 'superadmin') {
+      throw new AppError('Seul un superadmin peut gérer les rôles administrateur', 403)
+    }
+
     const role = body.role
     if (!role || !allowedRoles.has(role)) {
       throw new AppError('Rôle invalide', 400)

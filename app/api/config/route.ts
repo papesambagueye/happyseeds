@@ -8,7 +8,12 @@ import { handleApiError } from '@/lib/api-error-response'
 
 async function readConfig(): Promise<Record<string, string>> {
   const rows: Array<{ key: string; value: string | null }> = await db.select().from(storeConfig)
-  return Object.fromEntries(rows.map((row) => [row.key, row.value ?? '']))
+  const publicKeys = new Set(['site_name', 'logo_url', 'whatsapp_number', 'home_content'])
+  return Object.fromEntries(
+    rows
+      .filter((row) => publicKeys.has(row.key))
+      .map((row) => [row.key, row.value ?? ''])
+  )
 }
 
 export async function GET() {

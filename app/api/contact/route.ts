@@ -7,9 +7,13 @@ import { siteMessages } from '@/db/schemas/core'
 import { handleApiError } from '@/lib/api-error-response'
 import { getCurrentUser } from '@/lib/auth/session'
 import { AppError } from '@/lib/errors'
+import { consumeRateLimit, getClientIp } from '@/lib/auth/rate-limit'
 
 export async function POST(request: Request) {
   try {
+    if (!consumeRateLimit(`contact:${getClientIp(request)}`, { limit: 5, windowMs: 15 * 60 * 1000 }).allowed) {
+      return NextResponse.json({ success: false, error: 'Trop de messages. Réessayez plus tard.' }, { status: 429 })
+    }
     const body = (await request.json().catch(() => ({}))) as { name?: string; email?: string; subject?: string; message?: string }
     const name = body.name?.trim() ?? ''
     const email = body.email?.trim().toLowerCase() ?? ''

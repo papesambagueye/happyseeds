@@ -3,7 +3,7 @@ import 'server-only'
 import { and, eq, gt, lte, sql } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { db } from '@/db'
-import { loyaltyEvents, products, rewardClaims, vouchers } from '@/db/schemas/core'
+import { loyaltyEvents, products, rewardClaims, users, vouchers } from '@/db/schemas/core'
 import { getCurrentUser } from '@/lib/auth/session'
 import { handleApiError } from '@/lib/api-error-response'
 import { AppError } from '@/lib/errors'
@@ -38,6 +38,12 @@ export async function POST(request: Request) {
     const productId = body.productId
 
     const result = await db.transaction(async (tx: any) => {
+      await tx
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, user.id))
+        .for('update')
+
       const productRows = await tx.select().from(products).where(and(
         eq(products.id, productId),
         eq(products.published, 1),

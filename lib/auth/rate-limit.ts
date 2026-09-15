@@ -1,5 +1,11 @@
 const RATE_LIMIT_STORE = new Map<string, number[]>()
 
+export function getClientIp(request: Request): string {
+  const forwardedFor = request.headers.get('x-forwarded-for') ?? ''
+  const realIp = request.headers.get('x-real-ip') ?? ''
+  return (forwardedFor.split(',')[0] || realIp || 'unknown').trim()
+}
+
 type RateLimitOptions = {
   limit: number
   windowMs: number
