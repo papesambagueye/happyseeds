@@ -14,6 +14,7 @@ import { ImageUploadField } from '@/components/admin/image-upload-field'
 
 type HomeContent = {
   bannerImage: string
+  bannerText: string
   heroImage: string
   heroEyebrow: string
   heroTitle: string
@@ -29,7 +30,7 @@ type HomeContent = {
 }
 
 const defaultHomeContent: HomeContent = {
-  bannerImage: '', heroImage: '', heroEyebrow: 'TECH 221', heroTitle: "La tech qu'on aime, au bon prix.",
+  bannerImage: '', bannerText: 'Livraison rapide · offres exclusives · assistance WhatsApp', heroImage: '', heroEyebrow: 'TECH 221', heroTitle: "La tech qu'on aime, au bon prix.",
   heroDescription: 'Smartphones, audio, accessoires et gadgets premium conçus pour faciliter votre quotidien.',
   heroButton: 'Découvrir la boutique', promoButton: 'Voir les promos',
   benefits: [
@@ -111,6 +112,7 @@ export default function AdminSettings() {
           <Card className="space-y-4 p-5">
             <h2 className="font-semibold">Bannière au-dessus des avantages</h2>
             <ImageUploadField label="Image de la bannière" value={homeContent.bannerImage || null} onChange={(value) => setHomeContent({ ...homeContent, bannerImage: value ?? '' })} />
+            <div className="space-y-1.5"><Label>Texte de la façade</Label><Input value={homeContent.bannerText} onChange={(e) => setHomeContent({ ...homeContent, bannerText: e.target.value })} /></div>
           </Card>
 
           <Card className="space-y-4 p-5">

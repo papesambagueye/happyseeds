@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic'
 
 const defaultHomeContent = {
   bannerImage: '',
+  bannerText: 'Livraison rapide · offres exclusives · assistance WhatsApp',
   heroImage: 'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?w=1200',
   heroEyebrow: 'TECH 221',
   heroTitle: "La tech qu'on aime, au bon prix.",
@@ -94,7 +95,7 @@ export default async function HomePage() {
           </div>
         )}
         <div className="border-b border-black bg-[#E30613] px-4 py-2 text-center text-xs font-bold uppercase tracking-[0.16em] text-white">
-        Livraison rapide · offres exclusives · assistance WhatsApp
+        {content.bannerText}
         </div>
       {slides.length > 0 && <HeroCarousel slides={slides} shopLabel="Découvrir" />}
       <section className="relative overflow-hidden bg-black text-white">

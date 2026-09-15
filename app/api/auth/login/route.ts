@@ -9,9 +9,14 @@ import { handleApiError } from '@/lib/api-error-response'
 import { ValidationError } from '@/lib/errors'
 import { verifyPassword } from '@/lib/auth/password'
 import { createSession } from '@/lib/auth/session'
+import { consumeRateLimit } from '@/lib/auth/rate-limit'
 
 export async function POST(request: Request) {
   try {
+    const forwardedFor = request.headers.get('x-forwarded-for') ?? ''
+    const realIp = request.headers.get('x-real-ip') ?? ''
+    const clientIp = (forwardedFor.split(',')[0] || realIp || 'unknown').trim()
+
     const body = await request.json().catch(() => ({})) as {
       email?: string
       password?: string
@@ -19,6 +24,26 @@ export async function POST(request: Request) {
 
     const email = (body.email ?? '').trim().toLowerCase()
     const password = body.password ?? ''
+
+    const rateLimit = consumeRateLimit(`login:${clientIp}:${email || 'unknown'}`, {
+      limit: 5,
+      windowMs: 15 * 60 * 1000,
+    })
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Trop de tentatives de connexion. Réessayez dans quelques minutes.',
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.max(1, Math.ceil((rateLimit.resetAt - Date.now()) / 1000))),
+          },
+        }
+      )
+    }
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new ValidationError('Adresse e-mail invalide.')
