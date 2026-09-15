@@ -33,6 +33,7 @@ export function Header() {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [siteName, setSiteName] = useState<string | null>(null)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
   useEffect(() => {
     useCart.persist.rehydrate()
@@ -47,6 +48,7 @@ export function Header() {
     apiClient.get<Record<string, string>>('/api/config').then((res) => {
       if (res.success && res.data) {
         setSiteName(res.data.site_name ?? null)
+        setLogoUrl(res.data.logo_url ?? null)
       }
     })
   }, [])
@@ -82,7 +84,7 @@ export function Header() {
       <div className="mx-auto flex min-w-0 max-w-7xl items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4">
         <Link href="/" className="flex min-w-0 max-w-[45%] shrink items-center gap-2 font-bold text-lg sm:max-w-none">
           <div className="relative h-9 w-9 overflow-hidden rounded-xl bg-white">
-            <Image src="/diamant.png" alt="Logo TECH 221" fill className="object-contain" unoptimized />
+            <Image src={logoUrl || '/diamant.png'} alt={`Logo ${siteName ?? 'TECH 221'}`} fill className="object-contain" unoptimized />
           </div>
           <span className="truncate">{siteName ?? 'TECH\u00A0221'}</span>
         </Link>

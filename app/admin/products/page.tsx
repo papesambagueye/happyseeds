@@ -171,7 +171,9 @@ export default function AdminProducts() {
                   </div>
                 </TableCell>
                 <TableCell>{formatPrice(row.product.price, row.product.currency)}</TableCell>
-                <TableCell><Badge variant={row.product.stock <= 5 ? 'destructive' : 'secondary'}>{row.product.stock}</Badge></TableCell>
+                <TableCell>
+                  {row.product.stock <= 0 ? <Badge variant="destructive">Rupture de stock</Badge> : <Badge variant={row.product.stock <= 5 ? 'destructive' : 'secondary'}>{row.product.stock}</Badge>}
+                </TableCell>
                 <TableCell>{row.categoryName ?? '—'}</TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-1">

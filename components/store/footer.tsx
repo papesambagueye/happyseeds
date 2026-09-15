@@ -14,9 +14,17 @@ export function Footer() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [year, setYear] = useState<number | null>(null)
+  const [siteName, setSiteName] = useState('TECH 221')
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
   useEffect(() => {
     setYear(new Date().getFullYear())
+    apiClient.get<Record<string, string>>('/api/config').then((res) => {
+      if (res.success && res.data) {
+        setSiteName(res.data.site_name || 'TECH 221')
+        setLogoUrl(res.data.logo_url || null)
+      }
+    })
   }, [])
 
   const subscribe = async (e: React.FormEvent) => {
@@ -38,9 +46,9 @@ export function Footer() {
         <div>
           <div className="flex items-center gap-2 font-bold text-lg">
             <span className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-white">
-              <Image src="/diamant.png" alt="Logo TECH 221" fill className="object-contain" unoptimized />
+              <Image src={logoUrl || '/diamant.png'} alt={`Logo ${siteName}`} fill className="object-contain" unoptimized />
             </span>
-            TECH&nbsp;221
+            {siteName}
           </div>
           <p className="mt-3 text-sm text-white/65">
             {locale === 'fr'

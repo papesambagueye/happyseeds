@@ -97,7 +97,11 @@ export function ProductCard({ product }: { product: StoreProduct }) {
               Vente flash
             </span>
           )}
-          {!out && (
+          {out ? (
+            <span className="absolute right-2 top-2 rounded-md bg-[#E30613] px-2 py-1 text-xs font-bold text-white shadow-sm">
+              {t('out_of_stock')}
+            </span>
+          ) : (
             <span className="absolute right-2 top-2 rounded-md bg-white/95 px-2 py-1 text-xs font-semibold text-black shadow-sm">
               {t('in_stock')}
             </span>
